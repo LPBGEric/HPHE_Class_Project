@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>健康知識大挑戰 - CSV 外部載入版</title>
+    <style>
+        :root {
+            --primary: #27ae60;
+            --secondary: #f39c12;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --overlay: rgba(255, 255, 255, 0.94);
+        }
+
+        body {
+            margin: 0; padding: 0; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background: #e8f5e9; background-size: cover; background-position: center;
+            transition: background-image 0.5s ease; overflow: hidden;
+        }
+
+        #ui-score {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--primary); color: white;
+            padding: 8px 15px; border-radius: 20px;
+            font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 10; display: none;
+        }
+
+        #ui-timer {
+            position: absolute; top: 20px; left: 20px;
+            background: var(--dark); color: white;
+            padding: 8px 15px; border-radius: 20px;
+            font-weight: bold; z-index: 10; display: none;
+        }
+
+        .container {
+            background: var(--overlay); width: 92%; max-width: 500px;
+            padding: 20px; border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25); text-align: center;
+            position: relative;
+        }
+
+        .timer-bar-container {
+            width: 100%; height: 6px; background: #eee;
+            margin: 10px 0; border-radius: 3px; overflow: hidden;
+        }
+        #timer-fill {
+            height: 100%; width: 100%; background: var(--secondary);
+            transition: width 1s linear;
+        }
+
+        .screen { display: none; }
+        .active { display: block; }
+        h1 { color: var(--primary); margin-top: 0; font-size: 1.8em; }
+        
+        #canvas-wrap {
+            position: relative; margin: 10px auto;
+            border: 4px solid #bdc3c7; background: #fff;
+            width: 280px; height: 280px; border-radius: 12px;
+        }
+
+        canvas { display: block; }
+
+        .question-text {
+            font-size: 1.05em; font-weight: bold; color: var(--dark);
+            margin-bottom: 8px; min-height: 2.8em; line-height: 1.4;
+        }
+
+        .options-legend {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 6px; font-size: 0.85em; text-align: left;
+            background: rgba(46, 204, 113, 0.1); padding: 12px; border-radius: 12px;
+        }
+
+        .d-pad {
+            display: grid; grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(2, 55px); gap: 8px;
+            justify-content: center; margin-top: 12px;
+        }
+
+        .btn-move {
+            width: 50px; height: 50px; background: white;
+            border: 2px solid var(--primary); border-radius: 12px;
+            font-size: 20px; cursor: pointer; display: flex;
+            justify-content: center; align-items: center;
+            box-shadow: 0 3px 0 var(--primary);
+        }
+        
+        .btn-move:active { transform: translateY(3px); box-shadow: none; background: #f0f0f0; }
+
+        .start-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 15px 45px; font-size: 1.2em; border-radius: 30px;
+            cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-timer">剩餘時間: 15s</div>
+    <div id="ui-score">得分: 0</div>
+
+    <div class="container">
+        <div id="start-screen" class="screen active">
+            <div style="font-size: 60px;">🧬</div>
+            <h1>數據載入挑戰</h1>
+            <p>正在從 data.csv 讀取題目...</p>
+            <button id="start-btn" class="start-btn" style="display:none;" onclick="gameInit()">開始挑戰</button>
+            <p id="loading-status" style="color: #7f8c8d; font-size: 0.9em;">嘗試讀取檔案中...</p>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="timer-bar-container"><div id="timer-fill"></div></div>
+            <div id="progress" style="font-size: 0.8em; color: #7f8c8d; font-weight: bold;">題目 1/10</div>
+            <div class="question-text" id="q-text">載入中...</div>
+            <div id="canvas-wrap"><canvas id="gameCanvas" width="280" height="280"></canvas></div>
+            <div class="options-legend" id="opt-legend"></div>
+            <div class="d-pad">
+                <div></div><button class="btn-move" onclick="handleMove(0,-1)">▲</button><div></div>
+                <button class="btn-move" onclick="handleMove(-1,0)">◀</button>
+                <button class="btn-move" onclick="handleMove(0,1)">▼</button>
+                <button class="btn-move" onclick="handleMove(1,0)">▶</button>
+            </div>
+        </div>
+
+        <div id="end-screen" class="screen">
+            <h1>挑戰完成！</h1>
+            <p>最終得分</p>
+            <div id="final-score" style="font-size: 4.5em; color: var(--secondary); font-weight: bold;">0</div>
+            <button class="start-btn" onclick="location.reload()">再玩一次</button>
+        </div>
+    </div>
+
+<script>
+    let masterPool = [];
+    let sessionPool = [];
+    let currentIdx = 0;
+    let score = 0;
+    let timeLeft = 15;
+    let timerInterval = null;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const grid = 35; 
+    let player = { x: 3, y: 1 };
+    let box = { x: 3, y: 3 };
+    const goals = { 'A': { x: 1, y: 6 }, 'B': { x: 3, y: 6 }, 'C': { x: 5, y: 6 }, 'D': { x: 7, y: 6 } };
+
+    const bgImgs = ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800'];
+
+    // 1. Fetch CSV automatically on page load
+    window.onload = async () => {
+        try {
+            const response = await fetch('data.csv');
+            if (!response.ok) throw new Error('找不到 data.csv 檔案');
+            const data = await response.text();
+            
+            masterPool = data.trim().split('\n').map(line => {
+                const cols = line.split(',');
+                return {
+                    q: cols[0],
+                    a: [cols[1], cols[2], cols[3], cols[4]],
+                    ok: cols[5].trim().toUpperCase()
+                };
+            });
+
+            document.getElementById('loading-status').innerText = `成功載入 ${masterPool.length} 題！`;
+            document.getElementById('start-btn').style.display = 'inline-block';
+        } catch (err) {
+            document.getElementById('loading-status').innerText = `錯誤: ${err.message}. 請確保使用伺服器開啟本頁面。`;
+            document.getElementById('loading-status').style.color = 'var(--danger)';
+        }
+    };
+
+    function gameInit() {
+        sessionPool = masterPool.sort(() => 0.5 - Math.random()).slice(0, 10);
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('game-screen').classList.add('active');
+        document.getElementById('ui-score').style.display = 'block';
+        document.getElementById('ui-timer').style.display = 'block';
+        loadLevel();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 15;
+        updateTimerUI();
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerUI();
+            if (timeLeft <= 0) { clearInterval(timerInterval); nextLevel(); }
+        }, 1000);
+    }
+
+    function updateTimerUI() {
+        document.getElementById('ui-timer').innerText = `剩餘時間: ${timeLeft}s`;
+        const fill = document.getElementById('timer-fill');
+        fill.style.width = (timeLeft / 15 * 100) + "%";
+        fill.style.background = timeLeft <= 5 ? "var(--danger)" : "var(--secondary)";
+    }
+
+    function loadLevel() {
+        if (currentIdx >= sessionPool.length) return endSession();
+        document.body.style.backgroundImage = `url('${bgImgs[currentIdx % bgImgs.length]}')`;
+        document.getElementById('progress').innerText = `題目 ${currentIdx+1} / ${sessionPool.length}`;
+        document.getElementById('q-text').innerText = sessionPool[currentIdx].q;
+        document.getElementById('opt-legend').innerHTML = sessionPool[currentIdx].a.map((t, i) => 
+            `<div><b>${String.fromCharCode(65+i)}:</b> ${t}</div>`).join('');
+        player = { x: 3, y: 1 }; box = { x: 3, y: 3 };
+        startTimer(); draw();
+    }
+
+    function nextLevel() { currentIdx++; loadLevel(); }
+
+    function draw() {
+        ctx.clearRect(0,0,280,280);
+        ctx.strokeStyle = "#f0f0f0";
+        for(let i=0; i<8; i++) for(let j=0; j<8; j++) ctx.strokeRect(i*grid, j*grid, grid, grid);
+        for (let key in goals) {
+            ctx.fillStyle = "#fff9db"; ctx.fillRect(goals[key].x*grid + 2, goals[key].y*grid + 2, grid-4, grid-4);
+            ctx.fillStyle = "#e67e22"; ctx.font = "bold 16px Arial"; ctx.fillText(key, goals[key].x*grid + 12, goals[key].y*grid + 24);
+        }
+        ctx.fillStyle = "#3498db"; ctx.beginPath(); ctx.arc(player.x*grid + grid/2, player.y*grid + grid/2, 12, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#34495e"; ctx.fillRect(box.x*grid + 4, box.y*grid + 4, grid-8, grid-8);
+        ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.fillText("知識", box.x*grid+6, box.y*grid+22);
+    }
+
+    function handleMove(dx, dy) {
+        let np = { x: player.x + dx, y: player.y + dy };
+        if (np.x < 0 || np.x >= 8 || np.y < 0 || np.y >= 8) return;
+        if (np.x === box.x && np.y === box.y) {
+            let nb = { x: box.x + dx, y: box.y + dy };
+            if (nb.x < 0 || nb.x >= 8 || nb.y < 0 || nb.y >= 8) return;
+            box = nb;
+            checkLogic();
+        }
+        player = np; draw();
+    }
+
+    function checkLogic() {
+        for (let key in goals) {
+            if (box.x === goals[key].x && box.y === goals[key].y) {
+                clearInterval(timerInterval);
+                if (key === sessionPool[currentIdx].ok) {
+                    score += 10;
+                    document.getElementById('ui-score').innerText = `得分: ${score}`;
+                }
+                setTimeout(nextLevel, 300);
+            }
+        }
+    }
+
+    function endSession() {
+        clearInterval(timerInterval);
+        document.getElementById('game-screen').classList.remove('active');
+        document.getElementById('ui-score').style.display = 'none';
+        document.getElementById('ui-timer').style.display = 'none';
+        document.getElementById('end-screen').classList.add('active');
+        document.getElementById('final-score').innerText = score;
+        document.body.style.backgroundImage = "none";
+    }
+
+    window.addEventListener('keydown', e => {
+        if(e.key === 'ArrowUp') handleMove(0,-1);
+        if(e.key === 'ArrowDown') handleMove(0,1);
+        if(e.key === 'ArrowLeft') handleMove(-1,0);
+        if(e.key === 'ArrowRight') handleMove(1,0);
+    });
+</script>
+</body>
+</html>
