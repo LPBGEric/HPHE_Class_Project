@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>健康知識大挑戰 - CSV 外部載入版</title>
+    <title>健康知識大挑戰 - 獎勵加分版</title>
     <style>
         :root {
             --primary: #27ae60;
             --secondary: #f39c12;
+            --bonus-color: #9b59b6;
             --danger: #e74c3c;
             --dark: #2c3e50;
             --overlay: rgba(255, 255, 255, 0.94);
@@ -21,20 +22,22 @@
             transition: background-image 0.5s ease; overflow: hidden;
         }
 
-        #ui-score {
-            position: absolute; top: 20px; right: 20px;
-            background: var(--primary); color: white;
-            padding: 8px 15px; border-radius: 20px;
-            font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            z-index: 10; display: none;
+        /* UI Containers */
+        .stats-top {
+            position: absolute; top: 20px; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 20px;
+            box-sizing: border-box; z-index: 10; pointer-events: none;
         }
 
-        #ui-timer {
-            position: absolute; top: 20px; left: 20px;
-            background: var(--dark); color: white;
-            padding: 8px 15px; border-radius: 20px;
-            font-weight: bold; z-index: 10; display: none;
+        .stat-box {
+            padding: 8px 15px; border-radius: 20px; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); color: white;
+            display: none; min-width: 80px; text-align: center;
         }
+
+        #ui-timer { background: var(--dark); }
+        #ui-score { background: var(--primary); }
+        #ui-bonus { background: var(--bonus-color); margin-left: 10px; }
 
         .container {
             background: var(--overlay); width: 92%; max-width: 500px;
@@ -82,7 +85,7 @@
         }
 
         .btn-move {
-            width: 50px; height: 50px; background: white;
+            width: 50px; height: 50px; background: white; pointer-events: auto;
             border: 2px solid var(--primary); border-radius: 12px;
             font-size: 20px; cursor: pointer; display: flex;
             justify-content: center; align-items: center;
@@ -100,16 +103,21 @@
 </head>
 <body>
 
-    <div id="ui-timer">剩餘時間: 15s</div>
-    <div id="ui-score">得分: 0</div>
+    <div class="stats-top">
+        <div id="ui-timer" class="stat-box">時間: 15s</div>
+        <div style="display:flex;">
+            <div id="ui-score" class="stat-box">得分: 0</div>
+            <div id="ui-bonus" class="stat-box">獎勵: 0</div>
+        </div>
+    </div>
 
     <div class="container">
         <div id="start-screen" class="screen active">
-            <div style="font-size: 60px;">🧬</div>
-            <h1>數據載入挑戰</h1>
-            <p>正在從 data.csv 讀取題目...</p>
+            <div style="font-size: 60px;">⚡</div>
+            <h1>速戰速決挑戰</h1>
+            <p>答對越快，獎勵分數越高！</p>
             <button id="start-btn" class="start-btn" style="display:none;" onclick="gameInit()">開始挑戰</button>
-            <p id="loading-status" style="color: #7f8c8d; font-size: 0.9em;">嘗試讀取檔案中...</p>
+            <p id="loading-status">正在載入題庫...</p>
         </div>
 
         <div id="game-screen" class="screen">
@@ -128,8 +136,13 @@
 
         <div id="end-screen" class="screen">
             <h1>挑戰完成！</h1>
-            <p>最終得分</p>
-            <div id="final-score" style="font-size: 4.5em; color: var(--secondary); font-weight: bold;">0</div>
+            <div style="margin: 20px 0;">
+                <p>答題得分: <span id="final-base">0</span></p>
+                <p>速度獎勵: <span id="final-bonus" style="color: var(--bonus-color);">0</span></p>
+                <hr>
+                <p>總分</p>
+                <div id="final-total" style="font-size: 4em; color: var(--secondary); font-weight: bold;">0</div>
+            </div>
             <button class="start-btn" onclick="location.reload()">再玩一次</button>
         </div>
     </div>
@@ -139,6 +152,7 @@
     let sessionPool = [];
     let currentIdx = 0;
     let score = 0;
+    let bonus = 0; // New Bonus Tracker
     let timeLeft = 15;
     let timerInterval = null;
 
@@ -148,30 +162,21 @@
     let player = { x: 3, y: 1 };
     let box = { x: 3, y: 3 };
     const goals = { 'A': { x: 1, y: 6 }, 'B': { x: 3, y: 6 }, 'C': { x: 5, y: 6 }, 'D': { x: 7, y: 6 } };
-
     const bgImgs = ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800'];
 
-    // 1. Fetch CSV automatically on page load
     window.onload = async () => {
         try {
             const response = await fetch('data.csv');
-            if (!response.ok) throw new Error('找不到 data.csv 檔案');
+            if (!response.ok) throw new Error('找不到 data.csv');
             const data = await response.text();
-            
             masterPool = data.trim().split('\n').map(line => {
                 const cols = line.split(',');
-                return {
-                    q: cols[0],
-                    a: [cols[1], cols[2], cols[3], cols[4]],
-                    ok: cols[5].trim().toUpperCase()
-                };
+                return { q: cols[0], a: [cols[1], cols[2], cols[3], cols[4]], ok: cols[5].trim().toUpperCase() };
             });
-
-            document.getElementById('loading-status').innerText = `成功載入 ${masterPool.length} 題！`;
+            document.getElementById('loading-status').innerText = "已載入 " + masterPool.length + " 題";
             document.getElementById('start-btn').style.display = 'inline-block';
         } catch (err) {
-            document.getElementById('loading-status').innerText = `錯誤: ${err.message}. 請確保使用伺服器開啟本頁面。`;
-            document.getElementById('loading-status').style.color = 'var(--danger)';
+            document.getElementById('loading-status').innerText = "請確保 data.csv 存在並使用伺服器開啟";
         }
     };
 
@@ -179,8 +184,7 @@
         sessionPool = masterPool.sort(() => 0.5 - Math.random()).slice(0, 10);
         document.getElementById('start-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
-        document.getElementById('ui-score').style.display = 'block';
-        document.getElementById('ui-timer').style.display = 'block';
+        document.querySelectorAll('.stat-box').forEach(el => el.style.display = 'block');
         loadLevel();
     }
 
@@ -196,7 +200,7 @@
     }
 
     function updateTimerUI() {
-        document.getElementById('ui-timer').innerText = `剩餘時間: ${timeLeft}s`;
+        document.getElementById('ui-timer').innerText = `時間: ${timeLeft}s`;
         const fill = document.getElementById('timer-fill');
         fill.style.width = (timeLeft / 15 * 100) + "%";
         fill.style.background = timeLeft <= 5 ? "var(--danger)" : "var(--secondary)";
@@ -246,7 +250,9 @@
                 clearInterval(timerInterval);
                 if (key === sessionPool[currentIdx].ok) {
                     score += 10;
+                    bonus += timeLeft; // Add remaining time as bonus
                     document.getElementById('ui-score').innerText = `得分: ${score}`;
+                    document.getElementById('ui-bonus').innerText = `獎勵: ${bonus}`;
                 }
                 setTimeout(nextLevel, 300);
             }
@@ -256,10 +262,12 @@
     function endSession() {
         clearInterval(timerInterval);
         document.getElementById('game-screen').classList.remove('active');
-        document.getElementById('ui-score').style.display = 'none';
-        document.getElementById('ui-timer').style.display = 'none';
+        document.querySelectorAll('.stat-box').forEach(el => el.style.display = 'none');
         document.getElementById('end-screen').classList.add('active');
-        document.getElementById('final-score').innerText = score;
+        
+        document.getElementById('final-base').innerText = score;
+        document.getElementById('final-bonus').innerText = bonus;
+        document.getElementById('final-total').innerText = score + bonus;
         document.body.style.backgroundImage = "none";
     }
 
