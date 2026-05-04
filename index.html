@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>健康知識大挑戰 - 寬闊深淵版</title>
+    <title>健康知識大挑戰</title>
     <style>
         :root {
             --primary: #27ae60;
@@ -61,7 +61,6 @@
         #canvas-wrap {
             position: relative; margin: 10px auto;
             border: 4px solid #bdc3c7; background: #fff;
-            /* 11 columns * 35px = 385px | 10 rows * 35px = 350px */
             width: 385px; height: 350px; border-radius: 12px;
             overflow: hidden;
         }
@@ -114,9 +113,9 @@
 
     <div class="container">
         <div id="start-screen" class="screen active">
-            <div style="font-size: 50px;">🏗️</div>
-            <h1>空間升級挑戰</h1>
-            <p>更寬、更深的迷宮！左右多了緩衝空間。</p>
+            <div style="font-size: 50px;">🏠</div>
+            <h1>健康推推樂</h1>
+            <p></p>
             <button id="start-btn" class="start-btn" style="display:none;" onclick="gameInit()">開始挑戰</button>
             <p id="loading-status">讀取題庫中...</p>
         </div>
@@ -160,18 +159,18 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const grid = 35; 
-    const cols = 11; // 1 extra on each side
-    const rows = 10; // 1 extra deep
+    const cols = 11; 
+    const rows = 10; 
 
     let player = { x: 5, y: 1 }; 
-    let box = { x: 5, y: 4 };    
+    let box = { x: 5, y: 3 };    
     
-    // Spread goals across the new 11-column width at the new bottom row (index 9)
+    // Goals moved up to row index 6 (3 tiles above the bottom row which is index 9)
     const goals = { 
-        'A': { x: 1, y: 9 }, 
-        'B': { x: 4, y: 9 }, 
-        'C': { x: 6, y: 9 }, 
-        'D': { x: 9, y: 9 } 
+        'A': { x: 1, y: 6 }, 
+        'B': { x: 4, y: 6 }, 
+        'C': { x: 6, y: 6 }, 
+        'D': { x: 9, y: 6 } 
     };
 
     const bgImgs = ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800'];
@@ -227,7 +226,7 @@
             `<div><b>${String.fromCharCode(65+i)}:</b> ${t}</div>`).join('');
         
         player = { x: 5, y: 1 }; 
-        box = { x: 5, y: 4 };
+        box = { x: 5, y: 3 };
         startTimer(); draw();
     }
 
@@ -235,10 +234,14 @@
 
     function draw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
+        
+        // Grid lines
         ctx.strokeStyle = "#f0f0f0";
         for(let i=0; i<cols; i++) {
             for(let j=0; j<rows; j++) ctx.strokeRect(i*grid, j*grid, grid, grid);
         }
+
+        // Answer Tiles (Goals)
         for (let key in goals) {
             ctx.fillStyle = "#fff9db"; 
             ctx.fillRect(goals[key].x*grid + 2, goals[key].y*grid + 2, grid-4, grid-4);
@@ -246,8 +249,12 @@
             ctx.font = "bold 16px Arial"; 
             ctx.fillText(key, goals[key].x*grid + 11, goals[key].y*grid + 24);
         }
+
+        // Player (Blue Dot)
         ctx.fillStyle = "#3498db"; 
         ctx.beginPath(); ctx.arc(player.x*grid + grid/2, player.y*grid + grid/2, 12, 0, Math.PI*2); ctx.fill();
+        
+        // Box (Darker square)
         ctx.fillStyle = "#34495e"; 
         ctx.fillRect(box.x*grid + 4, box.y*grid + 4, grid-8, grid-8);
         ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.fillText("知識", box.x*grid+6, box.y*grid+22);
@@ -256,6 +263,7 @@
     function handleMove(dx, dy) {
         let np = { x: player.x + dx, y: player.y + dy };
         if (np.x < 0 || np.x >= cols || np.y < 0 || np.y >= rows) return;
+        
         if (np.x === box.x && np.y === box.y) {
             let nb = { x: box.x + dx, y: box.y + dy };
             if (nb.x < 0 || nb.x >= cols || nb.y < 0 || nb.y >= rows) return;
