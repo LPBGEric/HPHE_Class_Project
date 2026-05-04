@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>健康知識大挑戰 - 擴張迷宮版</title>
+    <title>健康知識大挑戰 - 寬闊深淵版</title>
     <style>
         :root {
             --primary: #27ae60;
@@ -39,8 +39,8 @@
         #ui-bonus { background: var(--bonus-color); margin-left: 10px; }
 
         .container {
-            background: var(--overlay); width: 95%; max-width: 550px;
-            padding: 20px; border-radius: 24px;
+            background: var(--overlay); width: 95%; max-width: 600px;
+            padding: 15px; border-radius: 24px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.25); text-align: center;
             position: relative;
         }
@@ -56,13 +56,14 @@
 
         .screen { display: none; }
         .active { display: block; }
-        h1 { color: var(--primary); margin-top: 0; font-size: 1.8em; }
+        h1 { color: var(--primary); margin-top: 0; font-size: 1.6em; }
         
         #canvas-wrap {
             position: relative; margin: 10px auto;
             border: 4px solid #bdc3c7; background: #fff;
-            /* 9 columns * 35px = 315px */
-            width: 315px; height: 315px; border-radius: 12px;
+            /* 11 columns * 35px = 385px | 10 rows * 35px = 350px */
+            width: 385px; height: 350px; border-radius: 12px;
+            overflow: hidden;
         }
 
         canvas { display: block; }
@@ -75,19 +76,19 @@
         .options-legend {
             display: grid; grid-template-columns: 1fr 1fr;
             gap: 6px; font-size: 0.85em; text-align: left;
-            background: rgba(46, 204, 113, 0.1); padding: 12px; border-radius: 12px;
+            background: rgba(46, 204, 113, 0.1); padding: 10px; border-radius: 12px;
         }
 
         .d-pad {
-            display: grid; grid-template-columns: repeat(3, 50px);
-            grid-template-rows: repeat(2, 55px); gap: 8px;
-            justify-content: center; margin-top: 12px;
+            display: grid; grid-template-columns: repeat(3, 45px);
+            grid-template-rows: repeat(2, 50px); gap: 8px;
+            justify-content: center; margin-top: 10px;
         }
 
         .btn-move {
-            width: 50px; height: 50px; background: white; pointer-events: auto;
-            border: 2px solid var(--primary); border-radius: 12px;
-            font-size: 20px; cursor: pointer; display: flex;
+            width: 45px; height: 45px; background: white; pointer-events: auto;
+            border: 2px solid var(--primary); border-radius: 10px;
+            font-size: 18px; cursor: pointer; display: flex;
             justify-content: center; align-items: center;
             box-shadow: 0 3px 0 var(--primary);
         }
@@ -96,7 +97,7 @@
 
         .start-btn {
             background: var(--primary); color: white; border: none;
-            padding: 15px 45px; font-size: 1.2em; border-radius: 30px;
+            padding: 12px 40px; font-size: 1.1em; border-radius: 30px;
             cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
         }
     </style>
@@ -113,9 +114,9 @@
 
     <div class="container">
         <div id="start-screen" class="screen active">
-            <div style="font-size: 60px;">🚀</div>
-            <h1>加深加廣挑戰</h1>
-            <p>迷宮已擴大！答對可獲剩餘秒數獎勵。</p>
+            <div style="font-size: 50px;">🏗️</div>
+            <h1>空間升級挑戰</h1>
+            <p>更寬、更深的迷宮！左右多了緩衝空間。</p>
             <button id="start-btn" class="start-btn" style="display:none;" onclick="gameInit()">開始挑戰</button>
             <p id="loading-status">讀取題庫中...</p>
         </div>
@@ -124,7 +125,7 @@
             <div class="timer-bar-container"><div id="timer-fill"></div></div>
             <div id="progress" style="font-size: 0.8em; color: #7f8c8d; font-weight: bold;">題目 1/10</div>
             <div class="question-text" id="q-text">載入中...</div>
-            <div id="canvas-wrap"><canvas id="gameCanvas" width="315" height="315"></canvas></div>
+            <div id="canvas-wrap"><canvas id="gameCanvas" width="385" height="350"></canvas></div>
             <div class="options-legend" id="opt-legend"></div>
             <div class="d-pad">
                 <div></div><button class="btn-move" onclick="handleMove(0,-1)">▲</button><div></div>
@@ -136,12 +137,12 @@
 
         <div id="end-screen" class="screen">
             <h1>挑戰完成！</h1>
-            <div style="margin: 20px 0;">
+            <div style="margin: 15px 0;">
                 <p>答題得分: <span id="final-base">0</span></p>
                 <p>速度獎勵: <span id="final-bonus" style="color: var(--bonus-color);">0</span></p>
                 <hr>
                 <p>總分</p>
-                <div id="final-total" style="font-size: 4em; color: var(--secondary); font-weight: bold;">0</div>
+                <div id="final-total" style="font-size: 3.5em; color: var(--secondary); font-weight: bold;">0</div>
             </div>
             <button class="start-btn" onclick="location.reload()">再玩一次</button>
         </div>
@@ -159,17 +160,18 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const grid = 35; 
-    const gridCount = 9; // Expanded to 9x9
+    const cols = 11; // 1 extra on each side
+    const rows = 10; // 1 extra deep
 
-    let player = { x: 4, y: 1 }; // Centered horizontally
-    let box = { x: 4, y: 4 };    // Centered horizontally
+    let player = { x: 5, y: 1 }; 
+    let box = { x: 5, y: 4 };    
     
-    // Adjusted goals for 9x9 grid: Deeper (row 8) and wider layout
+    // Spread goals across the new 11-column width at the new bottom row (index 9)
     const goals = { 
-        'A': { x: 1, y: 8 }, 
-        'B': { x: 3, y: 8 }, 
-        'C': { x: 5, y: 8 }, 
-        'D': { x: 7, y: 8 } 
+        'A': { x: 1, y: 9 }, 
+        'B': { x: 4, y: 9 }, 
+        'C': { x: 6, y: 9 }, 
+        'D': { x: 9, y: 9 } 
     };
 
     const bgImgs = ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800'];
@@ -180,8 +182,8 @@
             if (!response.ok) throw new Error();
             const data = await response.text();
             masterPool = data.trim().split('\n').map(line => {
-                const cols = line.split(',');
-                return { q: cols[0], a: [cols[1], cols[2], cols[3], cols[4]], ok: cols[5].trim().toUpperCase() };
+                const parts = line.split(',');
+                return { q: parts[0], a: [parts[1], parts[2], parts[3], parts[4]], ok: parts[5].trim().toUpperCase() };
             });
             document.getElementById('loading-status').innerText = "已載入 " + masterPool.length + " 題";
             document.getElementById('start-btn').style.display = 'inline-block';
@@ -224,8 +226,8 @@
         document.getElementById('opt-legend').innerHTML = sessionPool[currentIdx].a.map((t, i) => 
             `<div><b>${String.fromCharCode(65+i)}:</b> ${t}</div>`).join('');
         
-        player = { x: 4, y: 1 }; 
-        box = { x: 4, y: 4 };
+        player = { x: 5, y: 1 }; 
+        box = { x: 5, y: 4 };
         startTimer(); draw();
     }
 
@@ -233,36 +235,30 @@
 
     function draw() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = "#eee";
-        for(let i=0; i<gridCount; i++) {
-            for(let j=0; j<gridCount; j++) ctx.strokeRect(i*grid, j*grid, grid, grid);
+        ctx.strokeStyle = "#f0f0f0";
+        for(let i=0; i<cols; i++) {
+            for(let j=0; j<rows; j++) ctx.strokeRect(i*grid, j*grid, grid, grid);
         }
         for (let key in goals) {
             ctx.fillStyle = "#fff9db"; 
             ctx.fillRect(goals[key].x*grid + 2, goals[key].y*grid + 2, grid-4, grid-4);
             ctx.fillStyle = "#e67e22"; 
             ctx.font = "bold 16px Arial"; 
-            ctx.fillText(key, goals[key].x*grid + 12, goals[key].y*grid + 24);
+            ctx.fillText(key, goals[key].x*grid + 11, goals[key].y*grid + 24);
         }
-        // Player
         ctx.fillStyle = "#3498db"; 
-        ctx.beginPath(); 
-        ctx.arc(player.x*grid + grid/2, player.y*grid + grid/2, 12, 0, Math.PI*2); 
-        ctx.fill();
-        // Box
+        ctx.beginPath(); ctx.arc(player.x*grid + grid/2, player.y*grid + grid/2, 12, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "#34495e"; 
         ctx.fillRect(box.x*grid + 4, box.y*grid + 4, grid-8, grid-8);
-        ctx.fillStyle = "white"; 
-        ctx.font = "bold 10px Arial"; 
-        ctx.fillText("知識", box.x*grid+6, box.y*grid+22);
+        ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.fillText("知識", box.x*grid+6, box.y*grid+22);
     }
 
     function handleMove(dx, dy) {
         let np = { x: player.x + dx, y: player.y + dy };
-        if (np.x < 0 || np.x >= gridCount || np.y < 0 || np.y >= gridCount) return;
+        if (np.x < 0 || np.x >= cols || np.y < 0 || np.y >= rows) return;
         if (np.x === box.x && np.y === box.y) {
             let nb = { x: box.x + dx, y: box.y + dy };
-            if (nb.x < 0 || nb.x >= gridCount || nb.y < 0 || nb.y >= gridCount) return;
+            if (nb.x < 0 || nb.x >= cols || nb.y < 0 || nb.y >= rows) return;
             box = nb;
             checkLogic();
         }
