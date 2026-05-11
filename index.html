@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健康貪食蛇 - 生存挑戰版</title>
+    <title>健康生存挑戰 - 週期心心版</title>
     <style>
         :root { --primary-color: #2e7d32; --bg-color: #eef2f3; }
         body { margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
@@ -16,24 +16,20 @@
         #q-title { font-size: 1.2rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
         .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; }
         .opt-label { width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0; }
-        
-        /* Feedback Styling */
         #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 1rem; font-weight: bold; }
         .feedback-correct { background: #e8f5e9; color: #2e7d32; }
         .feedback-wrong { background: #ffebee; color: #d32f2f; border-left: 5px solid #d32f2f; }
-        
         .status { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; font-weight: bold; }
         #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 4rem; font-weight: 900; color: var(--primary-color); background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 20; }
-        
-        /* End Screen Visual Scale */
         .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
-        .score-scale { width: 300px; height: 20px; background: #eee; border-radius: 10px; margin: 20px 0; position: relative; overflow: hidden; display: flex; }
+        
+        /* End Screen UI */
+        .score-scale { width: 300px; height: 24px; background: #eee; border-radius: 12px; margin: 20px 0; position: relative; overflow: hidden; display: flex; border: 2px solid #ddd; }
         .section { height: 100%; }
         .s1 { width: 20%; background: #f44336; } /* 0-10 */
         .s2 { width: 60%; background: #ff9800; } /* 11-40 */
         .s3 { width: 20%; background: #4caf50; } /* 41-50 */
-        .indicator { position: absolute; top: 0; bottom: 0; width: 4px; background: #000; transition: left 1s ease-out; }
-        
+        .indicator { position: absolute; top: 0; bottom: 0; width: 6px; background: #000; transition: left 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 3px; }
         .btn-main { padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 5px; }
     </style>
 </head>
@@ -42,13 +38,13 @@
 <div id="app-box">
     <div id="scr-start" class="full-screen">
         <h1 style="color: var(--primary-color);">🐍 健康生存挑戰</h1>
-        <p id="load-status">正在載入題目...</p>
+        <p id="load-status">載入數據中...</p>
         <div class="btn-group">
             <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(220)" disabled>簡單</button>
             <button id="b-med" class="btn-main" style="background:#ff9800" onclick="gameInit(160)" disabled>中等</button>
             <button id="b-hard" class="btn-main" style="background:#f44336" onclick="gameInit(100)" disabled>困難</button>
         </div>
-        <p style="font-size: 0.8rem; margin-top: 15px;">撞牆扣心 | 答錯身體變短 | 低於3格長度失敗</p>
+        <p style="font-size: 0.85rem; margin-top: 15px; color: #666;">❤️ 每 2 關出現一次 | 答錯身體變短 | 撞牆扣心</p>
     </div>
 
     <div id="info-panel">
@@ -57,13 +53,13 @@
             <div id="opt-list"></div>
             <div id="feedback-area"></div>
         </div>
-        <button style="padding:10px; cursor:pointer;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
+        <button style="padding:10px; cursor:pointer; font-weight:bold;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
     </div>
 
     <div id="game-panel">
         <div class="status">
             <span id="ui-hearts">❤️❤️❤️</span>
-            <span>長度: <span id="ui-len">3</span> | 分數: <span id="ui-score">0</span></span>
+            <span>長度: <span id="ui-len">5</span> | 題數: <span id="ui-score">0</span></span>
         </div>
         <div class="canvas-container">
             <div id="ui-overlay">3</div>
@@ -73,8 +69,8 @@
 
     <div id="scr-end" class="full-screen" style="display:none">
         <h2 id="end-msg">遊戲結束</h2>
-        <div id="final-stats" style="font-size: 1.2rem;">最終蛇長: <span id="final-len">0</span></div>
-        <div style="margin-top: 10px;">總分: <span id="final-score" style="font-weight:bold; font-size: 2rem;">0</span></div>
+        <div style="font-size: 1.2rem; margin-bottom: 5px;">最終蛇身長度: <span id="final-len" style="color:var(--primary-color); font-weight:bold;">0</span></div>
+        <div style="font-size: 1.1rem;">答對題數: <span id="final-score" style="font-weight:bold;">0</span></div>
         
         <div class="score-scale">
             <div class="section s1"></div>
@@ -82,7 +78,7 @@
             <div class="section s3"></div>
             <div id="indicator" class="indicator" style="left: 0%;"></div>
         </div>
-        <div id="rank-text" style="font-weight:bold; font-size: 1.5rem; margin-bottom: 20px;"></div>
+        <div id="rank-text" style="font-weight:bold; font-size: 1.6rem; color: #333; margin-bottom: 20px;"></div>
         
         <button class="btn-main" style="background:var(--primary-color)" onclick="location.reload()">重新挑戰</button>
     </div>
@@ -93,7 +89,7 @@ let POOL = [];
 let curIdx=0, score=0, lives=3, loop=null, gameSpeed=150;
 let snake=[], dir={x:0, y:-1}, nextD={x:0, y:-1};
 let targets=[], heartBonus=null, isPaused = false, inCountdown = false, isSafe = false, isProcessing = false;
-let curSnakeLen = 5; // Start with 5 blocks
+let curSnakeLen = 5; 
 
 const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
 const grid=20, sz=20; 
@@ -106,7 +102,7 @@ window.onload = () => {
             document.getElementById('load-status').innerText = "數據載入成功！";
             document.querySelectorAll('.btn-main').forEach(b => b.disabled = false);
         })
-        .catch(() => { document.getElementById('load-status').innerText = "找不到 data.csv"; });
+        .catch(() => { document.getElementById('load-status').innerText = "請確認伺服器有 data.csv"; });
 };
 
 function parseCSV(text) {
@@ -174,8 +170,16 @@ function spawnItems() {
         } while(snake.some(s=>s.x==p.x && s.y==p.y) || targets.some(t=>t.x==p.x && t.y==p.y));
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
-    // Spawn heart randomly
-    heartBonus = (Math.random() > 0.6) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
+    
+    // Heart spawns every 2 levels (Level 2, 4, 6...)
+    if ((curIdx + 1) % 2 === 0) {
+        let hp;
+        do { hp = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)};
+        } while(snake.some(s=>s.x==hp.x && s.y==hp.y) || targets.some(t=>t.x==hp.x && t.y==hp.y));
+        heartBonus = hp;
+    } else {
+        heartBonus = null;
+    }
 }
 
 function gameStep() {
@@ -183,7 +187,7 @@ function gameStep() {
     dir = nextD;
     let head = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
     
-    // Wall/Self Bump (Decreases Hearts)
+    // Bumping wall or self
     if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid || (!isSafe && snake.some(s=>s.x==head.x && s.y==head.y))) {
         lives--;
         updateUI();
@@ -194,7 +198,7 @@ function gameStep() {
         return;
     }
 
-    // Recover Health
+    // Eating heart
     if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) {
         if(lives < 5) lives++; 
         heartBonus=null; 
@@ -215,7 +219,7 @@ function handleAnswer(isCorrect) {
     const fb = document.getElementById('feedback-area');
     
     if(isCorrect) {
-        score += 1; curSnakeLen++; // Score is count of questions for the scale
+        score += 1; curSnakeLen++; 
         fb.innerText = "✅ 答對了！身體增長";
         fb.className = "feedback-correct";
         fb.style.display = "block";
@@ -223,13 +227,13 @@ function handleAnswer(isCorrect) {
         curIdx++;
         loadLevel(); 
     } else {
-        curSnakeLen--; // Shrink
-        fb.innerText = `❌ 答錯了！身體變短 (正解: ${POOL[curIdx].ok})`;
+        curSnakeLen--; // Shrink on wrong answer
+        fb.innerText = `❌ 答錯了！身體縮短 (正確答案: ${POOL[curIdx].ok})`;
         fb.className = "feedback-wrong";
         fb.style.display = "block";
         
         updateUI();
-        if(curSnakeLen < 3) return gameOver(false); // Check length loss condition
+        if(curSnakeLen < 3) return gameOver(false); // Lost due to being too short
 
         isSafe = true;
         setTimeout(() => {
@@ -242,15 +246,27 @@ function handleAnswer(isCorrect) {
 
 function draw() {
     ctx.clearRect(0,0,400,400);
-    ctx.strokeStyle = "#f0f0f0";
+    ctx.strokeStyle = "#f3f3f3";
     for(let i=0; i<=grid; i++){ ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(400,i*sz); ctx.stroke(); }
-    if(heartBonus){ ctx.font="18px Arial"; ctx.textAlign="center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
+    
+    // Draw Heart Emoji
+    if(heartBonus){ 
+        ctx.font="18px Arial"; 
+        ctx.textAlign="center"; 
+        ctx.textBaseline="middle";
+        ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/2 + 2); 
+    }
+    
+    // Draw Answer Targets
     targets.forEach(t => { 
         ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/2.2, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = "#fff"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4); 
+        ctx.fillStyle = "#fff"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center"; ctx.textBaseline="middle";
+        ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/2 + 1); 
     });
+    
+    // Draw Snake
     snake.forEach((s, i) => { 
-        ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50":"#81c784"); 
+        ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50" : "#81c784"); 
         if(isSafe) ctx.globalAlpha = 0.4; 
         ctx.beginPath(); ctx.arc(s.x*sz+sz/2, s.y*sz+sz/2, sz/2.1, 0, Math.PI*2); ctx.fill(); 
         ctx.globalAlpha = 1.0; 
@@ -277,7 +293,8 @@ function gameOver(win) {
     document.getElementById('final-score').innerText = score;
     
     let rank = "";
-    let pos = (score / 50) * 100; // Assuming 50 questions total
+    let posPercent = (score / 50) * 100; // Map score 0-50 to 0-100%
+    
     if(score <= 10) {
         rank = "你的健康知識不足...";
     } else if (score <= 40) {
@@ -287,7 +304,8 @@ function gameOver(win) {
     }
     
     document.getElementById('rank-text').innerText = rank;
-    document.getElementById('indicator').style.left = Math.min(pos, 98) + "%";
+    // Cap indicator within visual bounds
+    document.getElementById('indicator').style.left = Math.min(Math.max(posPercent, 2), 95) + "%";
 }
 
 window.onkeydown = e => {
