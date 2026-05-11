@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健康貪食蛇 - 即時回饋版</title>
+    <title>健康貪食蛇 - 生存挑戰版</title>
     <style>
         :root { --primary-color: #2e7d32; --bg-color: #eef2f3; }
         body { margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
@@ -14,15 +14,26 @@
         .canvas-container { position: relative; width: 100%; max-width: 500px; aspect-ratio: 1 / 1; }
         canvas { width: 100%; height: 100%; background: #fff; border: 3px solid var(--primary-color); border-radius: 8px; display: block; }
         #q-title { font-size: 1.2rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
-        .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; transition: 0.3s; }
+        .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; }
         .opt-label { width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0; }
-        .highlight-correct { background: #e8f5e9; border: 2px solid #2e7d32; color: #1b5e20; transform: scale(1.02); }
+        
+        /* Feedback Styling */
         #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 1rem; font-weight: bold; }
         .feedback-correct { background: #e8f5e9; color: #2e7d32; }
         .feedback-wrong { background: #ffebee; color: #d32f2f; border-left: 5px solid #d32f2f; }
+        
         .status { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; font-weight: bold; }
         #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 4rem; font-weight: 900; color: var(--primary-color); background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 20; }
+        
+        /* End Screen Visual Scale */
         .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .score-scale { width: 300px; height: 20px; background: #eee; border-radius: 10px; margin: 20px 0; position: relative; overflow: hidden; display: flex; }
+        .section { height: 100%; }
+        .s1 { width: 20%; background: #f44336; } /* 0-10 */
+        .s2 { width: 60%; background: #ff9800; } /* 11-40 */
+        .s3 { width: 20%; background: #4caf50; } /* 41-50 */
+        .indicator { position: absolute; top: 0; bottom: 0; width: 4px; background: #000; transition: left 1s ease-out; }
+        
         .btn-main { padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 5px; }
     </style>
 </head>
@@ -30,31 +41,29 @@
 
 <div id="app-box">
     <div id="scr-start" class="full-screen">
-        <h1 style="color: var(--primary-color);">🐍 健康冒險</h1>
-        <p id="load-status">正在載入伺服器題目...</p>
+        <h1 style="color: var(--primary-color);">🐍 健康生存挑戰</h1>
+        <p id="load-status">正在載入題目...</p>
         <div class="btn-group">
             <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(220)" disabled>簡單</button>
             <button id="b-med" class="btn-main" style="background:#ff9800" onclick="gameInit(160)" disabled>中等</button>
             <button id="b-hard" class="btn-main" style="background:#f44336" onclick="gameInit(100)" disabled>困難</button>
         </div>
+        <p style="font-size: 0.8rem; margin-top: 15px;">撞牆扣心 | 答錯身體變短 | 低於3格長度失敗</p>
     </div>
 
     <div id="info-panel">
         <div>
-            <div id="q-title">載入中...</div>
+            <div id="q-title">請選擇難度</div>
             <div id="opt-list"></div>
             <div id="feedback-area"></div>
         </div>
-        <div style="display:flex; gap:5px;">
-            <button style="flex:1; padding:10px; cursor:pointer;" onclick="togglePause()">⏸️ 暫停</button>
-            <button style="flex:1; padding:10px; cursor:pointer;" onclick="location.reload()">🔄 重啟</button>
-        </div>
+        <button style="padding:10px; cursor:pointer;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
     </div>
 
     <div id="game-panel">
         <div class="status">
             <span id="ui-hearts">❤️❤️❤️</span>
-            <span>得分: <span id="ui-score">0</span></span>
+            <span>長度: <span id="ui-len">3</span> | 分數: <span id="ui-score">0</span></span>
         </div>
         <div class="canvas-container">
             <div id="ui-overlay">3</div>
@@ -63,9 +72,19 @@
     </div>
 
     <div id="scr-end" class="full-screen" style="display:none">
-        <h1 id="end-msg">遊戲結束</h1>
-        <div id="final-pts" style="font-size: 3rem; font-weight: 900; color: var(--primary-color);">0</div>
-        <button class="btn-main" style="background:var(--primary-color)" onclick="location.reload()">再玩一次</button>
+        <h2 id="end-msg">遊戲結束</h2>
+        <div id="final-stats" style="font-size: 1.2rem;">最終蛇長: <span id="final-len">0</span></div>
+        <div style="margin-top: 10px;">總分: <span id="final-score" style="font-weight:bold; font-size: 2rem;">0</span></div>
+        
+        <div class="score-scale">
+            <div class="section s1"></div>
+            <div class="section s2"></div>
+            <div class="section s3"></div>
+            <div id="indicator" class="indicator" style="left: 0%;"></div>
+        </div>
+        <div id="rank-text" style="font-weight:bold; font-size: 1.5rem; margin-bottom: 20px;"></div>
+        
+        <button class="btn-main" style="background:var(--primary-color)" onclick="location.reload()">重新挑戰</button>
     </div>
 </div>
 
@@ -74,7 +93,7 @@ let POOL = [];
 let curIdx=0, score=0, lives=3, loop=null, gameSpeed=150;
 let snake=[], dir={x:0, y:-1}, nextD={x:0, y:-1};
 let targets=[], heartBonus=null, isPaused = false, inCountdown = false, isSafe = false, isProcessing = false;
-let curSnakeLen = 3;
+let curSnakeLen = 5; // Start with 5 blocks
 
 const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
 const grid=20, sz=20; 
@@ -84,13 +103,10 @@ window.onload = () => {
         .then(res => res.ok ? res.text() : Promise.reject())
         .then(text => {
             parseCSV(text);
-            document.getElementById('load-status').innerText = "題目已就緒！";
+            document.getElementById('load-status').innerText = "數據載入成功！";
             document.querySelectorAll('.btn-main').forEach(b => b.disabled = false);
         })
-        .catch(() => {
-            document.getElementById('load-status').innerText = "找不到 data.csv";
-            document.getElementById('load-status').style.color = "red";
-        });
+        .catch(() => { document.getElementById('load-status').innerText = "找不到 data.csv"; });
 };
 
 function parseCSV(text) {
@@ -102,10 +118,8 @@ function parseCSV(text) {
 }
 
 function gameInit(speed) {
-    gameSpeed = speed; isPaused = false;
+    gameSpeed = speed; curIdx=0; score=0; lives=3; curSnakeLen = 5;
     document.getElementById('scr-start').style.display = 'none';
-    document.getElementById('scr-end').style.display = 'none';
-    curIdx=0; score=0; lives=3; curSnakeLen = 3;
     loadLevel();
 }
 
@@ -118,14 +132,11 @@ function loadLevel() {
     const data = POOL[curIdx];
     document.getElementById('q-title').innerText = (curIdx+1) + ". " + data.q;
     document.getElementById('opt-list').innerHTML = data.a.map((txt, i) => `
-        <div class="opt-row" id="opt-${String.fromCharCode(65+i)}">
-            <span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>
-            ${txt}
-        </div>`).join('');
+        <div class="opt-row"><span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>${txt}</div>`).join('');
     
     spawnItems();
-    if (snake.length === 0) resetSnakePosition(); // Only reset pos if new game
-    if (curIdx === 0) startCountdown(); // Only countdown on first question
+    if (snake.length === 0) resetSnakePosition();
+    if (curIdx === 0) startCountdown();
     else if(!loop) loop = setInterval(gameStep, gameSpeed);
 }
 
@@ -150,7 +161,7 @@ function startCountdown() {
 
 function resetSnakePosition() {
     snake = [];
-    for(let i=0; i<curSnakeLen; i++) snake.push({x: 10, y: 12 + i});
+    for(let i=0; i<curSnakeLen; i++) snake.push({x: 10, y: 10 + i});
     dir = {x:0, y:-1}; nextD = {x:0, y:-1};
 }
 
@@ -163,7 +174,8 @@ function spawnItems() {
         } while(snake.some(s=>s.x==p.x && s.y==p.y) || targets.some(t=>t.x==p.x && t.y==p.y));
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
-    heartBonus = (Math.random() > 0.7) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
+    // Spawn heart randomly
+    heartBonus = (Math.random() > 0.6) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
 }
 
 function gameStep() {
@@ -171,8 +183,10 @@ function gameStep() {
     dir = nextD;
     let head = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
     
+    // Wall/Self Bump (Decreases Hearts)
     if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid || (!isSafe && snake.some(s=>s.x==head.x && s.y==head.y))) {
-        lives--; updateUI();
+        lives--;
+        updateUI();
         if(lives <= 0) return gameOver(false);
         clearInterval(loop); loop = null;
         resetSnakePosition();
@@ -180,14 +194,15 @@ function gameStep() {
         return;
     }
 
+    // Recover Health
     if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) {
-        if(lives < 5) lives++; heartBonus=null; updateUI();
+        if(lives < 5) lives++; 
+        heartBonus=null; 
+        updateUI();
     }
 
     let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
-    if(tIdx !== -1 && !isProcessing) {
-        handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
-    }
+    if(tIdx !== -1 && !isProcessing) handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
 
     snake.unshift(head);
     if(snake.length > curSnakeLen) snake.pop(); 
@@ -198,41 +213,36 @@ function handleAnswer(isCorrect) {
     isProcessing = true;
     targets = []; 
     const fb = document.getElementById('feedback-area');
-    const correctLetter = POOL[curIdx].ok;
-
+    
     if(isCorrect) {
-        score += 10; curSnakeLen++;
-        fb.innerText = "✅ 太棒了！繼續前進";
+        score += 1; curSnakeLen++; // Score is count of questions for the scale
+        fb.innerText = "✅ 答對了！身體增長";
         fb.className = "feedback-correct";
         fb.style.display = "block";
-        setTimeout(() => { fb.style.display = "none"; }, 1000);
-        
+        setTimeout(() => { fb.style.display = "none"; }, 800);
         curIdx++;
         loadLevel(); 
     } else {
-        score -= 5; lives--;
-        fb.innerHTML = `❌ 答錯了！<br>正確答案是：(${correctLetter}) ${POOL[curIdx].a[correctLetter.charCodeAt(0)-65]}`;
+        curSnakeLen--; // Shrink
+        fb.innerText = `❌ 答錯了！身體變短 (正解: ${POOL[curIdx].ok})`;
         fb.className = "feedback-wrong";
         fb.style.display = "block";
         
-        // Highlight the correct one in the list
-        document.getElementById(`opt-${correctLetter}`).classList.add('highlight-correct');
-        
         updateUI();
-        if(lives <= 0) return gameOver(false);
+        if(curSnakeLen < 3) return gameOver(false); // Check length loss condition
 
-        isSafe = true; // Temporary invincibility
+        isSafe = true;
         setTimeout(() => {
             fb.style.display = "none";
             curIdx++;
             loadLevel();
-        }, 2500); 
+        }, 1500);
     }
 }
 
 function draw() {
     ctx.clearRect(0,0,400,400);
-    ctx.strokeStyle = "#f3f3f3";
+    ctx.strokeStyle = "#f0f0f0";
     for(let i=0; i<=grid; i++){ ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(400,i*sz); ctx.stroke(); }
     if(heartBonus){ ctx.font="18px Arial"; ctx.textAlign="center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
     targets.forEach(t => { 
@@ -247,6 +257,12 @@ function draw() {
     });
 }
 
+function updateUI() {
+    document.getElementById('ui-hearts').innerText = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 5-lives));
+    document.getElementById('ui-len').innerText = curSnakeLen;
+    document.getElementById('ui-score').innerText = score;
+}
+
 function togglePause() {
     if(inCountdown) return;
     const overlay = document.getElementById('ui-overlay');
@@ -254,16 +270,24 @@ function togglePause() {
     else { clearInterval(loop); isPaused=true; overlay.style.display='flex'; overlay.innerText = "已暫停"; }
 }
 
-function updateUI() {
-    document.getElementById('ui-hearts').innerText = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 5-lives));
-    document.getElementById('ui-score').innerText = score;
-}
-
 function gameOver(win) {
     clearInterval(loop);
     document.getElementById('scr-end').style.display = 'flex';
-    document.getElementById('end-msg').innerText = win ? "🏆 挑戰成功！" : "💀 體力耗盡！";
-    document.getElementById('final-pts').innerText = score;
+    document.getElementById('final-len').innerText = curSnakeLen;
+    document.getElementById('final-score').innerText = score;
+    
+    let rank = "";
+    let pos = (score / 50) * 100; // Assuming 50 questions total
+    if(score <= 10) {
+        rank = "你的健康知識不足...";
+    } else if (score <= 40) {
+        rank = "很棒！";
+    } else {
+        rank = "太厲害了！";
+    }
+    
+    document.getElementById('rank-text').innerText = rank;
+    document.getElementById('indicator').style.left = Math.min(pos, 98) + "%";
 }
 
 window.onkeydown = e => {
