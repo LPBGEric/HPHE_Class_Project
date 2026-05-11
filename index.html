@@ -3,69 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健康貪食蛇 - 動態縮放版</title>
+    <title>健康貪食蛇 - 即時回饋版</title>
     <style>
-        :root {
-            --primary-color: #2e7d32;
-            --bg-color: #eef2f3;
-        }
-
-        body { 
-            margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; 
-            display: flex; justify-content: center; align-items: center; min-height: 100vh; 
-            overflow: hidden; 
-        }
-
-        #app-box { 
-            background: #fff; border: 4px solid var(--primary-color); display: flex; 
-            width: 95vw; height: 90vh; max-width: 1200px; position: relative; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 15px; overflow: hidden;
-            flex-direction: row;
-        }
-
-        /* Responsive Layout: Stack vertically on small screens */
-        @media (max-width: 768px) {
-            #app-box { flex-direction: column; height: 95vh; }
-            #info-panel { flex: 0.4 !important; border-right: none !important; border-bottom: 2px solid #f0f0f0; }
-        }
-
-        #info-panel { 
-            flex: 0.7; padding: 20px; border-right: 2px solid #f0f0f0; 
-            display: flex; flex-direction: column; justify-content: space-between;
-            background: #fff; z-index: 5; overflow-y: auto;
-        }
-
-        #game-panel { 
-            flex: 1.3; padding: 10px; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; background: #fafafa; position: relative; 
-        }
-
-        /* Scaling the Canvas Container */
-        .canvas-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            aspect-ratio: 1 / 1;
-        }
-
-        canvas { 
-            width: 100%; height: 100%;
-            background: #fff; border: 3px solid var(--primary-color); border-radius: 8px; 
-            display: block;
-        }
-
+        :root { --primary-color: #2e7d32; --bg-color: #eef2f3; }
+        body { margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        #app-box { background: #fff; border: 4px solid var(--primary-color); display: flex; width: 95vw; height: 90vh; max-width: 1200px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 15px; overflow: hidden; flex-direction: row; }
+        @media (max-width: 768px) { #app-box { flex-direction: column; height: 95vh; } #info-panel { flex: 0.5 !important; border-right: none !important; border-bottom: 2px solid #f0f0f0; } }
+        #info-panel { flex: 0.7; padding: 20px; border-right: 2px solid #f0f0f0; display: flex; flex-direction: column; justify-content: space-between; background: #fff; z-index: 5; overflow-y: auto; }
+        #game-panel { flex: 1.3; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
+        .canvas-container { position: relative; width: 100%; max-width: 500px; aspect-ratio: 1 / 1; }
+        canvas { width: 100%; height: 100%; background: #fff; border: 3px solid var(--primary-color); border-radius: 8px; display: block; }
         #q-title { font-size: 1.2rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
-        .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; }
+        .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; transition: 0.3s; }
         .opt-label { width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0; }
-        
-        #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 0.9rem; }
-        .feedback-correct { background: #e8f5e9; border-left: 5px solid #2e7d32; color: #1b5e20; }
-        .feedback-wrong { background: #ffebee; border-left: 5px solid #d32f2f; color: #b71c1c; }
-
+        .highlight-correct { background: #e8f5e9; border: 2px solid #2e7d32; color: #1b5e20; transform: scale(1.02); }
+        #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 1rem; font-weight: bold; }
+        .feedback-correct { background: #e8f5e9; color: #2e7d32; }
+        .feedback-wrong { background: #ffebee; color: #d32f2f; border-left: 5px solid #d32f2f; }
         .status { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; font-weight: bold; }
-        
         #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 4rem; font-weight: 900; color: var(--primary-color); background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 20; }
-
         .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         .btn-main { padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 5px; }
     </style>
@@ -74,7 +30,7 @@
 
 <div id="app-box">
     <div id="scr-start" class="full-screen">
-        <h1 style="color: var(--primary-color);">🐍 健康冒險 (動態縮放)</h1>
+        <h1 style="color: var(--primary-color);">🐍 健康冒險</h1>
         <p id="load-status">正在載入伺服器題目...</p>
         <div class="btn-group">
             <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(220)" disabled>簡單</button>
@@ -87,14 +43,11 @@
         <div>
             <div id="q-title">載入中...</div>
             <div id="opt-list"></div>
-            <div id="feedback-area">
-                <b id="fb-status"></b><br>
-                <span id="fb-note">吃到錯誤答案僅扣分/扣血，遊戲不中斷。</span>
-            </div>
+            <div id="feedback-area"></div>
         </div>
         <div style="display:flex; gap:5px;">
-            <button style="flex:1; padding:8px;" onclick="togglePause()">⏸️ 暫停</button>
-            <button style="flex:1; padding:8px;" onclick="location.reload()">🔄 重啟</button>
+            <button style="flex:1; padding:10px; cursor:pointer;" onclick="togglePause()">⏸️ 暫停</button>
+            <button style="flex:1; padding:10px; cursor:pointer;" onclick="location.reload()">🔄 重啟</button>
         </div>
     </div>
 
@@ -124,18 +77,18 @@ let targets=[], heartBonus=null, isPaused = false, inCountdown = false, isSafe =
 let curSnakeLen = 3;
 
 const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
-const grid=20, sz=20; // 400 / 20 = 20
+const grid=20, sz=20; 
 
 window.onload = () => {
     fetch('data.csv')
         .then(res => res.ok ? res.text() : Promise.reject())
         .then(text => {
             parseCSV(text);
-            document.getElementById('load-status').innerText = "題目已就緒，請選擇難度：";
+            document.getElementById('load-status').innerText = "題目已就緒！";
             document.querySelectorAll('.btn-main').forEach(b => b.disabled = false);
         })
         .catch(() => {
-            document.getElementById('load-status').innerText = "無法載入 data.csv";
+            document.getElementById('load-status').innerText = "找不到 data.csv";
             document.getElementById('load-status').style.color = "red";
         });
 };
@@ -149,7 +102,7 @@ function parseCSV(text) {
 }
 
 function gameInit(speed) {
-    gameSpeed = speed; isPaused = false; isProcessing = false;
+    gameSpeed = speed; isPaused = false;
     document.getElementById('scr-start').style.display = 'none';
     document.getElementById('scr-end').style.display = 'none';
     curIdx=0; score=0; lives=3; curSnakeLen = 3;
@@ -159,17 +112,21 @@ function gameInit(speed) {
 function loadLevel() {
     if(curIdx >= POOL.length) return gameOver(true);
     updateUI();
-    document.getElementById('feedback-area').style.display = 'none';
+    isProcessing = false;
+    isSafe = false;
+    
     const data = POOL[curIdx];
     document.getElementById('q-title').innerText = (curIdx+1) + ". " + data.q;
     document.getElementById('opt-list').innerHTML = data.a.map((txt, i) => `
-        <div class="opt-row">
+        <div class="opt-row" id="opt-${String.fromCharCode(65+i)}">
             <span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>
             ${txt}
         </div>`).join('');
+    
     spawnItems();
-    resetSnakePosition();
-    startCountdown();
+    if (snake.length === 0) resetSnakePosition(); // Only reset pos if new game
+    if (curIdx === 0) startCountdown(); // Only countdown on first question
+    else if(!loop) loop = setInterval(gameStep, gameSpeed);
 }
 
 function startCountdown() {
@@ -206,7 +163,7 @@ function spawnItems() {
         } while(snake.some(s=>s.x==p.x && s.y==p.y) || targets.some(t=>t.x==p.x && t.y==p.y));
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
-    heartBonus = (Math.random() > 0.5) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
+    heartBonus = (Math.random() > 0.7) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
 }
 
 function gameStep() {
@@ -214,11 +171,10 @@ function gameStep() {
     dir = nextD;
     let head = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
     
-    // Wall/Self Collision
     if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid || (!isSafe && snake.some(s=>s.x==head.x && s.y==head.y))) {
         lives--; updateUI();
         if(lives <= 0) return gameOver(false);
-        clearInterval(loop);
+        clearInterval(loop); loop = null;
         resetSnakePosition();
         startCountdown();
         return;
@@ -229,7 +185,9 @@ function gameStep() {
     }
 
     let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
-    if(tIdx !== -1 && !isProcessing) handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
+    if(tIdx !== -1 && !isProcessing) {
+        handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
+    }
 
     snake.unshift(head);
     if(snake.length > curSnakeLen) snake.pop(); 
@@ -239,22 +197,37 @@ function gameStep() {
 function handleAnswer(isCorrect) {
     isProcessing = true;
     targets = []; 
-    if(isCorrect) { score += 10; curSnakeLen++; } else { score -= 10; lives--; }
-    
-    updateUI();
-    if(lives <= 0) return gameOver(false);
+    const fb = document.getElementById('feedback-area');
+    const correctLetter = POOL[curIdx].ok;
 
-    const fbArea = document.getElementById('feedback-area');
-    document.getElementById('fb-status').innerText = isCorrect ? "✅ 答對了！" : "❌ 答錯了！扣生命與分數";
-    fbArea.className = isCorrect ? "feedback-correct" : "feedback-wrong";
-    fbArea.style.display = 'block';
+    if(isCorrect) {
+        score += 10; curSnakeLen++;
+        fb.innerText = "✅ 太棒了！繼續前進";
+        fb.className = "feedback-correct";
+        fb.style.display = "block";
+        setTimeout(() => { fb.style.display = "none"; }, 1000);
+        
+        curIdx++;
+        loadLevel(); 
+    } else {
+        score -= 5; lives--;
+        fb.innerHTML = `❌ 答錯了！<br>正確答案是：(${correctLetter}) ${POOL[curIdx].a[correctLetter.charCodeAt(0)-65]}`;
+        fb.className = "feedback-wrong";
+        fb.style.display = "block";
+        
+        // Highlight the correct one in the list
+        document.getElementById(`opt-${correctLetter}`).classList.add('highlight-correct');
+        
+        updateUI();
+        if(lives <= 0) return gameOver(false);
 
-    isSafe = true; // Temporary invincibility
-    curIdx++;
-    setTimeout(() => {
-        isProcessing = false; isSafe = false;
-        loadLevel();
-    }, 2000);
+        isSafe = true; // Temporary invincibility
+        setTimeout(() => {
+            fb.style.display = "none";
+            curIdx++;
+            loadLevel();
+        }, 2500); 
+    }
 }
 
 function draw() {
