@@ -2,309 +2,334 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>健康知識大挑戰</title>
+    <title>健康自然貪食蛇 - 強化版</title>
     <style>
-        :root {
-            --primary: #27ae60;
-            --secondary: #f39c12;
-            --bonus-color: #9b59b6;
-            --danger: #e74c3c;
-            --dark: #2c3e50;
-            --overlay: rgba(255, 255, 255, 0.94);
+        body { 
+            margin: 0; background: #eef2f3; font-family: "Microsoft JhengHei", sans-serif; 
+            display: flex; justify-content: center; align-items: center; height: 100vh; 
+            overflow: hidden; 
         }
-
-        body {
-            margin: 0; padding: 0; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            background: #e8f5e9; background-size: cover; background-position: center;
-            transition: background-image 0.5s ease; overflow: hidden;
+        #app-box { 
+            background: #fff; border: 5px solid #2e7d32; display: flex; 
+            width: 95vw; max-width: 1050px; height: 85vh; position: relative; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 20px; overflow: hidden;
         }
-
-        .stats-top {
-            position: absolute; top: 20px; width: 100%;
-            display: flex; justify-content: space-between; padding: 0 20px;
-            box-sizing: border-box; z-index: 10; pointer-events: none;
+        #info-panel { 
+            flex: 0.7; padding: 25px; border-right: 2px solid #f0f0f0; 
+            display: flex; flex-direction: column; justify-content: space-between;
         }
-
-        .stat-box {
-            padding: 8px 15px; border-radius: 20px; font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); color: white;
-            display: none; min-width: 80px; text-align: center;
-        }
-
-        #ui-timer { background: var(--dark); }
-        #ui-score { background: var(--primary); }
-        #ui-bonus { background: var(--bonus-color); margin-left: 10px; }
-
-        .container {
-            background: var(--overlay); width: 95%; max-width: 600px;
-            padding: 15px; border-radius: 24px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.25); text-align: center;
-            position: relative;
-        }
-
-        .timer-bar-container {
-            width: 100%; height: 6px; background: #eee;
-            margin: 10px 0; border-radius: 3px; overflow: hidden;
-        }
-        #timer-fill {
-            height: 100%; width: 100%; background: var(--secondary);
-            transition: width 1s linear;
-        }
-
-        .screen { display: none; }
-        .active { display: block; }
-        h1 { color: var(--primary); margin-top: 0; font-size: 1.6em; }
+        #q-title { font-size: 1.5rem; font-weight: 900; color: #1b5e20; margin-bottom: 15px; }
+        .opt-row { margin: 10px 0; font-size: 1.15rem; font-weight: bold; display: flex; align-items: center; }
+        .opt-label { width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 12px; font-size: 1rem; flex-shrink: 0; }
         
-        #canvas-wrap {
-            position: relative; margin: 10px auto;
-            border: 4px solid #bdc3c7; background: #fff;
-            width: 385px; height: 350px; border-radius: 12px;
-            overflow: hidden;
+        .btn-area { display: flex; gap: 10px; }
+        .btn-side { 
+            flex: 1; padding: 12px 5px; border-radius: 10px; cursor: pointer; 
+            font-weight: bold; text-align: center; font-size: 0.95rem; transition: 0.2s;
         }
+        .btn-restart { background: #f0f4f0; color: #2e7d32; border: 2px solid #2e7d32; }
+        .btn-restart:hover { background: #2e7d32; color: white; }
+        .btn-pause { background: #fff8e1; color: #f57f17; border: 2px solid #f57f17; }
+        .btn-pause:hover { background: #f57f17; color: white; }
 
-        canvas { display: block; }
-
-        .question-text {
-            font-size: 1.05em; font-weight: bold; color: var(--dark);
-            margin-bottom: 8px; min-height: 2.8em; line-height: 1.4;
-        }
-
-        .options-legend {
-            display: grid; grid-template-columns: 1fr 1fr;
-            gap: 6px; font-size: 0.85em; text-align: left;
-            background: rgba(46, 204, 113, 0.1); padding: 10px; border-radius: 12px;
-        }
-
-        .d-pad {
-            display: grid; grid-template-columns: repeat(3, 45px);
-            grid-template-rows: repeat(2, 50px); gap: 8px;
-            justify-content: center; margin-top: 10px;
-        }
-
-        .btn-move {
-            width: 45px; height: 45px; background: white; pointer-events: auto;
-            border: 2px solid var(--primary); border-radius: 10px;
-            font-size: 18px; cursor: pointer; display: flex;
-            justify-content: center; align-items: center;
-            box-shadow: 0 3px 0 var(--primary);
-        }
+        #game-panel { flex: 1.3; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
+        canvas { background: #fff; border: 8px solid blue; border-radius: 10px; }
+        .status { width: 448px; display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.4rem; font-weight: 900; }
         
-        .btn-move:active { transform: translateY(3px); box-shadow: none; background: #f0f0f0; }
-
-        .start-btn {
-            background: var(--primary); color: white; border: none;
-            padding: 12px 40px; font-size: 1.1em; border-radius: 30px;
-            cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        #pause-overlay { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3rem; font-weight: 900; color: #f57f17; 
+            background: rgba(255,255,255,0.8); padding: 10px 30px; border-radius: 15px;
+            display: none; pointer-events: none; z-index: 10;
         }
+
+        .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .game-desc { max-width: 650px; font-size: 1.1rem; color: #444; line-height: 1.6; margin: 15px 0; background: #f9f9f9; padding: 20px; border-radius: 15px; border-left: 5px solid #2e7d32; text-align: left; }
+        .btn-group { display: flex; gap: 20px; margin-top: 10px; }
+        .btn-main { padding: 12px 35px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-easy { background: #4caf50; }
+        .btn-med { background: #ff9800; }
+        .btn-hard { background: #f44336; }
+        .btn-next { background: #2e7d32; padding: 12px 40px; font-size: 1.4rem; cursor: pointer; border: none; border-radius: 50px; color: white; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="stats-top">
-        <div id="ui-timer" class="stat-box">時間: 15s</div>
-        <div style="display:flex;">
-            <div id="ui-score" class="stat-box">得分: 0</div>
-            <div id="ui-bonus" class="stat-box">獎勵: 0</div>
+<div id="app-box">
+    <div id="scr-start" class="full-screen">
+        <h1 style="font-size: 2.8rem; color: #2e7d32; margin-bottom: 5px;">🐍 自然健康貪食蛇</h1>
+        <div class="game-desc">
+            <b>遊戲規則：</b><br>
+            • 答對：<b>+10分</b> 且 <b>長度增加一格</b>。<br>
+            • 答錯：<b>-10分</b> (不扣心)。<br>
+            • 撞牆：<b>扣 1 顆心</b>。<br>
+            • 吃到 ❤️ 補血 (最高5顆)，吃到 🌟 加 10 分。
+        </div>
+        <div class="btn-group">
+            <button class="btn-main btn-easy" onclick="gameInit(260)">簡單</button>
+            <button class="btn-main btn-med" onclick="gameInit(160)">中等</button>
+            <button class="btn-main btn-hard" onclick="gameInit(130)">困難</button>
         </div>
     </div>
 
-    <div class="container">
-        <div id="start-screen" class="screen active">
-            <div style="font-size: 50px;">🏠</div>
-            <h1>健康推推樂</h1>
-            <p>遊戲說明：請使用鍵盤上的上、下、左、右鍵去移動遊戲中的小圓圈，並將小方塊推至正確選項A、B、C、D，每一道題目皆有時間限制。</p>
-            <button id="start-btn" class="start-btn" style="display:none;" onclick="gameInit()">開始挑戰</button>
-            <p id="loading-status">讀取題庫中...</p>
+    <div id="info-panel">
+        <div>
+            <div id="q-title">載入中...</div>
+            <div id="opt-list"></div>
         </div>
-
-        <div id="game-screen" class="screen">
-            <div class="timer-bar-container"><div id="timer-fill"></div></div>
-            <div id="progress" style="font-size: 0.8em; color: #7f8c8d; font-weight: bold;">題目 1/10</div>
-            <div class="question-text" id="q-text">載入中...</div>
-            <div id="canvas-wrap"><canvas id="gameCanvas" width="385" height="350"></canvas></div>
-            <div class="options-legend" id="opt-legend"></div>
-            <div class="d-pad">
-                <div></div><button class="btn-move" onclick="handleMove(0,-1)">▲</button><div></div>
-                <button class="btn-move" onclick="handleMove(-1,0)">◀</button>
-                <button class="btn-move" onclick="handleMove(0,1)">▼</button>
-                <button class="btn-move" onclick="handleMove(1,0)">▶</button>
-            </div>
-        </div>
-
-        <div id="end-screen" class="screen">
-            <h1>挑戰完成！</h1>
-            <div style="margin: 15px 0;">
-                <p>答題得分: <span id="final-base">0</span></p>
-                <p>速度獎勵: <span id="final-bonus" style="color: var(--bonus-color);">0</span></p>
-                <hr>
-                <p>總分</p>
-                <div id="final-total" style="font-size: 3.5em; color: var(--secondary); font-weight: bold;">0</div>
-            </div>
-            <button class="start-btn" onclick="location.reload()">再玩一次</button>
+        <div class="btn-area">
+            <div class="btn-side btn-pause" id="ui-pause-btn" onclick="togglePause()">⏸️ 暫停</div>
+            <div class="btn-side btn-restart" onclick="backToMenu()">🔄 重選難度</div>
         </div>
     </div>
+
+    <div id="game-panel">
+        <div id="pause-overlay">已暫停</div>
+        <div class="status">
+            <span id="ui-hearts" style="color: #ff1744;">❤️❤️❤️</span>
+            <span style="color:#2e7d32">得分: <span id="ui-score">0</span></span>
+        </div>
+        <canvas id="cvs" width="448" height="448"></canvas>
+    </div>
+
+    <div id="scr-msg" class="full-screen" style="display:none">
+        <h2 id="msg-header" style="font-size: 2.2rem;"></h2>
+        <p id="msg-body" style="font-size: 1.3rem; padding: 0 60px; margin-bottom: 20px; line-height: 1.6;"></p>
+        <button class="btn-next" onclick="proceed()">下一題</button>
+    </div>
+
+    <div id="scr-end" class="full-screen" style="display:none">
+        <h1 id="end-msg" style="font-size: 3rem;">遊戲結束</h1>
+        <div id="final-pts" style="font-size: 4rem; font-weight: 900; color: #2e7d32; margin: 10px 0;">0</div>
+        <button class="btn-next" onclick="backToMenu()">再玩一次</button>
+    </div>
+</div>
 
 <script>
-    let masterPool = [];
-    let sessionPool = [];
-    let currentIdx = 0;
-    let score = 0;
-    let bonus = 0;
-    let timeLeft = 15;
-    let timerInterval = null;
+const POOL = [
+    {q:"「我的餐盤」每餐水果建議量？", a:["一個拳頭大","兩根香蕉","三碗份量","隨便吃"], ok:"A", n:"建議每餐攝取一個拳頭大的水果。"},
+    {q:"運動後補充什麼最能修復肌肉？", a:["純油脂","優質蛋白質","含糖飲料","冰塊"], ok:"B", n:"蛋白質是修復肌肉的主要原料。"},
+    {q:"預防骨質疏鬆應多補充什麼？", a:["鈉","鈣質豐富食物","糖分","鐵質"], ok: "B", n:"鈣質是骨骼健康的基礎。"},
+    {q:"健康的減重速度建議每週？", a:["0.5-1公斤","5公斤","10公斤","不吃東西"], ok:"A", n:"每週0.5-1kg最能持久且不傷身。"},
+    {q:"關於補水觀念，何者正確？", a:["渴了再喝","定時少量補水","渴了吃冰","不必喝水"], ok:"B", n:"應主動定時定量補充足夠水分。"},
+    {q:"全穀雜糧（如糙米）的好處？", a:["顏色白","纖維與營養豐富","比較甜","比較便宜"], ok:"B", n:"全穀類比精製白米營養價值更高。"},
+    {q:"成人每週建議中強度運動量？", a:["10分鐘","150分鐘以上","1000分鐘","不必運動"], ok:"B", n:"每週150分鐘運動能促進心血管健康。"},
+    {q:"哪種油含較多優質脂肪酸？", a:["豬油","植物油/堅果油","奶油","椰子油"], ok:"B", n:"植物性油含有優質不飽和脂肪酸。"},
+    {q:"「333運動法」指每週運動幾次？", a:["1次","3次","5次","7次"], ok:"B", n:"333是指每週3次、每次30分鐘、心跳達130下。"},
+    {q:"哪種食物鐵質較為豐富？", a:["白蘿蔔","紅鳳菜/菠菜","冬瓜","洋蔥"], ok:"B", n:"深色蔬菜是優質的植物性鐵質來源。"}
+];
 
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const grid = 35; 
-    const cols = 11; 
-    const rows = 10; 
+let curIdx=0, score=0, lives=3, loop=null, gameSpeed=200;
+let snake=[], dir={x:0, y:-1}, nextD={x:0, y:-1};
+let targets=[], heartBonus=null, starBonus=null, isPaused = false;
+let curSnakeLen = 3; 
 
-    let player = { x: 5, y: 1 }; 
-    let box = { x: 5, y: 3 };    
+const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
+const sz=32, grid=14; 
+
+function gameInit(speed) {
+    gameSpeed = speed; isPaused = false;
+    document.getElementById('scr-start').style.display = 'none';
+    document.getElementById('scr-end').style.display = 'none';
+    curIdx=0; score=0; lives=3; curSnakeLen = 3; 
+    loadLevel();
+}
+
+function resetSnakePosition() {
+    let safe = false;
+    let headX, headY;
     
-    // Goals moved up to row index 6 (3 tiles above the bottom row which is index 9)
-    const goals = { 
-        'A': { x: 1, y: 6 }, 
-        'B': { x: 4, y: 6 }, 
-        'C': { x: 6, y: 6 }, 
-        'D': { x: 9, y: 6 } 
-    };
-
-    const bgImgs = ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800'];
-
-    window.onload = async () => {
-        try {
-            const response = await fetch('data.csv');
-            if (!response.ok) throw new Error();
-            const data = await response.text();
-            masterPool = data.trim().split('\n').map(line => {
-                const parts = line.split(',');
-                return { q: parts[0], a: [parts[1], parts[2], parts[3], parts[4]], ok: parts[5].trim().toUpperCase() };
-            });
-            document.getElementById('loading-status').innerText = "已載入 " + masterPool.length + " 題";
-            document.getElementById('start-btn').style.display = 'inline-block';
-        } catch (err) {
-            document.getElementById('loading-status').innerText = "請確保 data.csv 存在並使用伺服器啟動";
-        }
-    };
-
-    function gameInit() {
-        sessionPool = masterPool.sort(() => 0.5 - Math.random()).slice(0, 10);
-        document.getElementById('start-screen').classList.remove('active');
-        document.getElementById('game-screen').classList.add('active');
-        document.querySelectorAll('.stat-box').forEach(el => el.style.display = 'block');
-        loadLevel();
-    }
-
-    function startTimer() {
-        clearInterval(timerInterval);
-        timeLeft = 15;
-        updateTimerUI();
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            updateTimerUI();
-            if (timeLeft <= 0) { clearInterval(timerInterval); nextLevel(); }
-        }, 1000);
-    }
-
-    function updateTimerUI() {
-        document.getElementById('ui-timer').innerText = `時間: ${timeLeft}s`;
-        const fill = document.getElementById('timer-fill');
-        fill.style.width = (timeLeft / 15 * 100) + "%";
-        fill.style.background = timeLeft <= 5 ? "var(--danger)" : "var(--secondary)";
-    }
-
-    function loadLevel() {
-        if (currentIdx >= sessionPool.length) return endSession();
-        document.body.style.backgroundImage = `url('${bgImgs[currentIdx % bgImgs.length]}')`;
-        document.getElementById('progress').innerText = `題目 ${currentIdx+1} / ${sessionPool.length}`;
-        document.getElementById('q-text').innerText = sessionPool[currentIdx].q;
-        document.getElementById('opt-legend').innerHTML = sessionPool[currentIdx].a.map((t, i) => 
-            `<div><b>${String.fromCharCode(65+i)}:</b> ${t}</div>`).join('');
+    while(!safe) {
+        headX = Math.floor(Math.random() * grid);
+        headY = Math.floor(Math.random() * (grid - curSnakeLen));
         
-        player = { x: 5, y: 1 }; 
-        box = { x: 5, y: 3 };
-        startTimer(); draw();
-    }
-
-    function nextLevel() { currentIdx++; loadLevel(); }
-
-    function draw() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        let tooClose = targets.some(t => Math.abs(t.x - headX) + Math.abs(t.y - headY) < 4);
+        if (heartBonus && Math.abs(heartBonus.x - headX) + Math.abs(heartBonus.y - headY) < 4) tooClose = true;
+        if (starBonus && Math.abs(starBonus.x - headX) + Math.abs(starBonus.y - headY) < 4) tooClose = true;
         
-        // Grid lines
-        ctx.strokeStyle = "#f0f0f0";
-        for(let i=0; i<cols; i++) {
-            for(let j=0; j<rows; j++) ctx.strokeRect(i*grid, j*grid, grid, grid);
-        }
-
-        // Answer Tiles (Goals)
-        for (let key in goals) {
-            ctx.fillStyle = "#fff9db"; 
-            ctx.fillRect(goals[key].x*grid + 2, goals[key].y*grid + 2, grid-4, grid-4);
-            ctx.fillStyle = "#e67e22"; 
-            ctx.font = "bold 16px Arial"; 
-            ctx.fillText(key, goals[key].x*grid + 11, goals[key].y*grid + 24);
-        }
-
-        // Player (Blue Dot)
-        ctx.fillStyle = "#3498db"; 
-        ctx.beginPath(); ctx.arc(player.x*grid + grid/2, player.y*grid + grid/2, 12, 0, Math.PI*2); ctx.fill();
-        
-        // Box (Darker square)
-        ctx.fillStyle = "#34495e"; 
-        ctx.fillRect(box.x*grid + 4, box.y*grid + 4, grid-8, grid-8);
-        ctx.fillStyle = "white"; ctx.font = "bold 10px Arial"; ctx.fillText("知識", box.x*grid+6, box.y*grid+22);
+        if(!tooClose) safe = true;
     }
 
-    function handleMove(dx, dy) {
-        let np = { x: player.x + dx, y: player.y + dy };
-        if (np.x < 0 || np.x >= cols || np.y < 0 || np.y >= rows) return;
-        
-        if (np.x === box.x && np.y === box.y) {
-            let nb = { x: box.x + dx, y: box.y + dy };
-            if (nb.x < 0 || nb.x >= cols || nb.y < 0 || nb.y >= rows) return;
-            box = nb;
-            checkLogic();
+    snake = [];
+    for(let i=0; i<curSnakeLen; i++) {
+        snake.push({x: headX, y: headY + i}); 
+    }
+    dir = {x:0, y:-1}; nextD = {x:0, y:-1};
+}
+
+function updateUI() {
+    document.getElementById('ui-hearts').innerText = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 5-lives));
+    document.getElementById('ui-score').innerText = score;
+}
+
+function loadLevel() {
+    if(curIdx >= 10) return gameOver(true);
+    updateUI();
+    const data = POOL[curIdx];
+    document.getElementById('q-title').innerText = (curIdx+1) + ". " + data.q;
+    const colors = ["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"];
+    document.getElementById('opt-list').innerHTML = data.a.map((txt, i) => `
+        <div class="opt-row">
+            <span class="opt-label" style="background:${colors[i]}">${String.fromCharCode(65+i)}</span>
+            ${txt}
+        </div>`).join('');
+    
+    spawnItems();
+    resetSnakePosition(); 
+    
+    if(loop) clearInterval(loop);
+    loop = setInterval(gameStep, gameSpeed);
+}
+
+function spawnItems() {
+    targets = []; heartBonus = null; starBonus = null;
+    const colors = ["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"];
+    
+    for(let i=0; i<4; i++) {
+        let p;
+        while(true) {
+            p = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)}; 
+            let overlaps = targets.some(t => Math.abs(t.x - p.x) + Math.abs(t.y - p.y) < 3);
+            if(!overlaps) break;
         }
-        player = np; draw();
+        targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
+    }
+    
+    do {
+        heartBonus = {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)};
+    } while (targets.some(t => t.x == heartBonus.x && t.y == heartBonus.y));
+
+    do {
+        starBonus = {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)};
+    } while (targets.some(t => t.x == starBonus.x && t.y == starBonus.y) || (heartBonus.x == starBonus.x && heartBonus.y == starBonus.y));
+}
+
+function gameStep() {
+    if(isPaused) return;
+    dir = nextD;
+    let head = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
+    
+    if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid) {
+        lives--; updateUI();
+        if(lives <= 0) return gameOver(false);
+        resetSnakePosition(); return;
     }
 
-    function checkLogic() {
-        for (let key in goals) {
-            if (box.x === goals[key].x && box.y === goals[key].y) {
-                clearInterval(timerInterval);
-                if (key === sessionPool[currentIdx].ok) {
-                    score += 10;
-                    bonus += timeLeft;
-                    document.getElementById('ui-score').innerText = `得分: ${score}`;
-                    document.getElementById('ui-bonus').innerText = `獎勵: ${bonus}`;
-                }
-                setTimeout(nextLevel, 300);
-            }
+    if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) { 
+        if(lives < 5) lives++; 
+        updateUI(); 
+        heartBonus=null; 
+    }
+    if(starBonus && head.x==starBonus.x && head.y==starBonus.y) { 
+        score += 10; 
+        updateUI(); 
+        starBonus=null; 
+    }
+
+    let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
+    if(tIdx !== -1) {
+        if(targets[tIdx].char == POOL[curIdx].ok) {
+            score += 10; 
+            curSnakeLen++; 
+            showResult(false);
+        } else {
+            score -= 10; 
+            updateUI(); 
+            showResult(true);
         }
+        return;
     }
 
-    function endSession() {
-        clearInterval(timerInterval);
-        document.getElementById('game-screen').classList.remove('active');
-        document.querySelectorAll('.stat-box').forEach(el => el.style.display = 'none');
-        document.getElementById('end-screen').classList.add('active');
-        document.getElementById('final-base').innerText = score;
-        document.getElementById('final-bonus').innerText = bonus;
-        document.getElementById('final-total').innerText = score + bonus;
-        document.body.style.backgroundImage = "none";
-    }
+    snake.unshift(head);
+    snake.pop(); 
+    draw();
+}
 
-    window.addEventListener('keydown', e => {
-        if(e.key === 'ArrowUp') handleMove(0,-1);
-        if(e.key === 'ArrowDown') handleMove(0,1);
-        if(e.key === 'ArrowLeft') handleMove(-1,0);
-        if(e.key === 'ArrowRight') handleMove(1,0);
+function draw() {
+    ctx.clearRect(0,0,448,448);
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
+    for(let i=0; i<=grid; i++) {
+        ctx.beginPath(); ctx.moveTo(i*sz, 0); ctx.lineTo(i*sz, 448); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i*sz); ctx.lineTo(448, i*sz); ctx.stroke();
+    }
+    
+    targets.forEach(t => {
+        ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/2.2, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = "bold 20px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4);
     });
+
+    if(heartBonus) { ctx.font = "24px Arial"; ctx.textAlign = "center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
+    if(starBonus) { ctx.font = "24px Arial"; ctx.textAlign = "center"; ctx.fillText("🌟", starBonus.x*sz+sz/2, starBonus.y*sz+sz/1.2); }
+    
+    snake.forEach((s, i) => {
+        const centerX = s.x * sz + sz / 2;
+        const centerY = s.y * sz + sz / 2;
+        let radius = sz / 2 - 2;
+        if (i > snake.length - 3) radius -= (i - (snake.length - 3)) * 3;
+
+        if (i === 0) {
+            ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = "#ff1744"; ctx.lineWidth = 3; ctx.beginPath();
+            ctx.moveTo(centerX + dir.x * radius, centerY + dir.y * radius);
+            ctx.lineTo(centerX + dir.x * (radius + 10), centerY + dir.y * (radius + 10)); ctx.stroke();
+            ctx.fillStyle = "white"; const eyeOffset = 6;
+            let eyeX1, eyeY1, eyeX2, eyeY2;
+            if(dir.x !== 0) { eyeX1 = eyeX2 = centerX + dir.x * 5; eyeY1 = centerY - eyeOffset; eyeY2 = centerY + eyeOffset; }
+            else { eyeY1 = eyeY2 = centerY + dir.y * 5; eyeX1 = centerX - eyeOffset; eyeX2 = centerX + eyeOffset; }
+            ctx.beginPath(); ctx.arc(eyeX1, eyeY1, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(eyeX2, eyeY2, 4, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(eyeX1 + dir.x*2, eyeY1 + dir.y*2, 2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(eyeX2 + dir.x*2, eyeY2 + dir.y*2, 2, 0, Math.PI*2); ctx.fill();
+        } else {
+            ctx.fillStyle = (i % 2 === 0) ? "#4caf50" : "#66bb6a"; ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(centerX - 3, centerY - 3, radius/3, 0, Math.PI*2); ctx.fill();
+        }
+    });
+}
+
+function showResult(wrong) {
+    clearInterval(loop);
+    document.getElementById('scr-msg').style.display = 'flex';
+    const h = document.getElementById('msg-header');
+    h.innerText = wrong ? "❌ 答錯了 (-10分)" : "✅ 答對了 (+10分)";
+    h.style.color = wrong ? "#f44336" : "#2e7d32";
+    document.getElementById('msg-body').innerText = POOL[curIdx].n;
+}
+
+function proceed() {
+    document.getElementById('scr-msg').style.display = 'none';
+    curIdx++; loadLevel();
+}
+
+function togglePause() {
+    if(isPaused) { loop = setInterval(gameStep, gameSpeed); isPaused=false; document.getElementById('pause-overlay').style.display='none'; }
+    else { clearInterval(loop); isPaused=true; document.getElementById('pause-overlay').style.display='block'; }
+}
+
+function backToMenu() {
+    clearInterval(loop);
+    document.getElementById('scr-start').style.display = 'flex';
+    document.getElementById('scr-end').style.display = 'none';
+    document.getElementById('scr-msg').style.display = 'none';
+}
+
+function gameOver(win) {
+    clearInterval(loop);
+    document.getElementById('scr-end').style.display = 'flex';
+    document.getElementById('end-msg').innerText = win ? "🏆 森林小博士！" : "💀 再接再厲！";
+    document.getElementById('final-pts').innerText = score;
+}
+
+window.onkeydown = e => {
+    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+        e.preventDefault();
+        if(e.key=="ArrowUp" && dir.y!=1) nextD={x:0, y:-1};
+        else if(e.key=="ArrowDown" && dir.y!=-1) nextD={x:0, y:1};
+        else if(e.key=="ArrowLeft" && dir.x!=1) nextD={x:-1, y:0};
+        else if(e.key=="ArrowRight" && dir.x!=-1) nextD={x:1, y:0};
+    }
+};
 </script>
 </body>
 </html>
