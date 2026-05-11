@@ -2,59 +2,85 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>健康自然貪食蛇 - 伺服器數據版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康貪食蛇 - 動態縮放版</title>
     <style>
+        :root {
+            --primary-color: #2e7d32;
+            --bg-color: #eef2f3;
+        }
+
         body { 
-            margin: 0; background: #eef2f3; font-family: "Microsoft JhengHei", sans-serif; 
-            display: flex; justify-content: center; align-items: center; height: 100vh; 
+            margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; 
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; 
             overflow: hidden; 
         }
+
         #app-box { 
-            background: #fff; border: 5px solid #2e7d32; display: flex; 
-            width: 95vw; max-width: 1000px; height: 85vh; position: relative; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 20px; overflow: hidden;
+            background: #fff; border: 4px solid var(--primary-color); display: flex; 
+            width: 95vw; height: 90vh; max-width: 1200px; position: relative; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 15px; overflow: hidden;
+            flex-direction: row;
         }
+
+        /* Responsive Layout: Stack vertically on small screens */
+        @media (max-width: 768px) {
+            #app-box { flex-direction: column; height: 95vh; }
+            #info-panel { flex: 0.4 !important; border-right: none !important; border-bottom: 2px solid #f0f0f0; }
+        }
+
         #info-panel { 
-            flex: 0.8; padding: 25px; border-right: 2px solid #f0f0f0; 
+            flex: 0.7; padding: 20px; border-right: 2px solid #f0f0f0; 
             display: flex; flex-direction: column; justify-content: space-between;
-            background: #fff; z-index: 5;
+            background: #fff; z-index: 5; overflow-y: auto;
         }
-        #q-title { font-size: 1.4rem; font-weight: 900; color: #1b5e20; margin-bottom: 15px; }
-        .opt-row { margin: 8px 0; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; }
-        .opt-label { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 12px; font-size: 0.9rem; flex-shrink: 0; }
+
+        #game-panel { 
+            flex: 1.3; padding: 10px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; background: #fafafa; position: relative; 
+        }
+
+        /* Scaling the Canvas Container */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 1 / 1;
+        }
+
+        canvas { 
+            width: 100%; height: 100%;
+            background: #fff; border: 3px solid var(--primary-color); border-radius: 8px; 
+            display: block;
+        }
+
+        #q-title { font-size: 1.2rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
+        .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; }
+        .opt-label { width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0; }
         
-        #feedback-area { margin-top: 15px; padding: 15px; border-radius: 10px; display: none; animation: fadeIn 0.3s; }
+        #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 0.9rem; }
         .feedback-correct { background: #e8f5e9; border-left: 5px solid #2e7d32; color: #1b5e20; }
         .feedback-wrong { background: #ffebee; border-left: 5px solid #d32f2f; color: #b71c1c; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-area { display: flex; gap: 10px; }
-        .btn-side { flex: 1; padding: 12px 5px; border-radius: 10px; cursor: pointer; font-weight: bold; text-align: center; border: 1px solid #ccc; background: #fff;}
+        .status { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; font-weight: bold; }
         
-        #game-panel { flex: 1.2; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
-        canvas { background: #fff; border: 4px solid #2e7d32; border-radius: 10px; }
-        .status { width: 480px; display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.2rem; font-weight: 900; }
-        
-        #ui-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5rem; font-weight: 900; color: #2e7d32; background: rgba(255,255,255,0.8); width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 20; }
+        #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 4rem; font-weight: 900; color: var(--primary-color); background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 20; }
 
-        .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .btn-main { padding: 12px 35px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 10px; transition: 0.2s; }
-        .btn-main:disabled { background: #ccc !important; cursor: not-allowed; }
+        .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .btn-main { padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 5px; }
     </style>
 </head>
 <body>
 
 <div id="app-box">
     <div id="scr-start" class="full-screen">
-        <h1 style="color: #2e7d32; font-size: 2.5rem;">🐍 20x20 健康冒險</h1>
-        <p id="load-status">正在從伺服器載入題目...</p>
-
+        <h1 style="color: var(--primary-color);">🐍 健康冒險 (動態縮放)</h1>
+        <p id="load-status">正在載入伺服器題目...</p>
         <div class="btn-group">
-            <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(200)" disabled>簡單</button>
-            <button id="b-med" class="btn-main" style="background:#ff9800" onclick="gameInit(150)" disabled>中等</button>
+            <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(220)" disabled>簡單</button>
+            <button id="b-med" class="btn-main" style="background:#ff9800" onclick="gameInit(160)" disabled>中等</button>
             <button id="b-hard" class="btn-main" style="background:#f44336" onclick="gameInit(100)" disabled>困難</button>
         </div>
-        <p style="font-size: 0.9rem; color: #666;">[Space] 暫停 | ❤️ 恢復體力</p>
     </div>
 
     <div id="info-panel">
@@ -63,28 +89,30 @@
             <div id="opt-list"></div>
             <div id="feedback-area">
                 <b id="fb-status"></b><br>
-                <span id="fb-note"></span>
+                <span id="fb-note">吃到錯誤答案僅扣分/扣血，遊戲不中斷。</span>
             </div>
         </div>
-        <div class="btn-area">
-            <div class="btn-side" onclick="togglePause()">⏸️ 暫停</div>
-            <div class="btn-side" onclick="location.reload()">🔄 重啟</div>
+        <div style="display:flex; gap:5px;">
+            <button style="flex:1; padding:8px;" onclick="togglePause()">⏸️ 暫停</button>
+            <button style="flex:1; padding:8px;" onclick="location.reload()">🔄 重啟</button>
         </div>
     </div>
 
     <div id="game-panel">
-        <div id="ui-overlay">3</div>
         <div class="status">
-            <span id="ui-hearts" style="color: #ff1744;">❤️❤️❤️</span>
-            <span style="color:#2e7d32">得分: <span id="ui-score">0</span></span>
+            <span id="ui-hearts">❤️❤️❤️</span>
+            <span>得分: <span id="ui-score">0</span></span>
         </div>
-        <canvas id="cvs" width="480" height="480"></canvas>
+        <div class="canvas-container">
+            <div id="ui-overlay">3</div>
+            <canvas id="cvs" width="400" height="400"></canvas>
+        </div>
     </div>
 
     <div id="scr-end" class="full-screen" style="display:none">
         <h1 id="end-msg">遊戲結束</h1>
-        <div id="final-pts" style="font-size: 4rem; font-weight: 900; color: #2e7d32;">0</div>
-        <button class="btn-main" style="background:#2e7d32" onclick="location.reload()">再玩一次</button>
+        <div id="final-pts" style="font-size: 3rem; font-weight: 900; color: var(--primary-color);">0</div>
+        <button class="btn-main" style="background:var(--primary-color)" onclick="location.reload()">再玩一次</button>
     </div>
 </div>
 
@@ -96,36 +124,27 @@ let targets=[], heartBonus=null, isPaused = false, inCountdown = false, isSafe =
 let curSnakeLen = 3;
 
 const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
-const sz=24, grid=20; 
+const grid=20, sz=20; // 400 / 20 = 20
 
-// 1. Fetch data.csv from server on load
 window.onload = () => {
     fetch('data.csv')
-        .then(response => {
-            if (!response.ok) throw new Error("找不到 data.csv 檔案");
-            return response.text();
-        })
+        .then(res => res.ok ? res.text() : Promise.reject())
         .then(text => {
             parseCSV(text);
-            document.getElementById('load-status').innerText = "題目載入成功！請選擇難度：";
+            document.getElementById('load-status').innerText = "題目已就緒，請選擇難度：";
             document.querySelectorAll('.btn-main').forEach(b => b.disabled = false);
         })
-        .catch(err => {
-            document.getElementById('load-status').innerText = "錯誤: " + err.message;
+        .catch(() => {
+            document.getElementById('load-status').innerText = "無法載入 data.csv";
             document.getElementById('load-status').style.color = "red";
         });
 };
 
 function parseCSV(text) {
     const lines = text.split(/\r?\n/);
-    POOL = lines.filter(line => line.trim() !== "").map(line => {
-        const p = line.split(',');
-        // Expected: q, a1, a2, a3, a4, correctAnswer
-        return {
-            q: p[0],
-            a: [p[1], p[2], p[3], p[4]],
-            ok: p[5]?.trim().toUpperCase() || "A"
-        };
+    POOL = lines.filter(l => l.trim() !== "").map(l => {
+        const p = l.split(',');
+        return { q: p[0], a: [p[1], p[2], p[3], p[4]], ok: p[5]?.trim().toUpperCase() || "A" };
     });
 }
 
@@ -141,7 +160,6 @@ function loadLevel() {
     if(curIdx >= POOL.length) return gameOver(true);
     updateUI();
     document.getElementById('feedback-area').style.display = 'none';
-    
     const data = POOL[curIdx];
     document.getElementById('q-title').innerText = (curIdx+1) + ". " + data.q;
     document.getElementById('opt-list').innerHTML = data.a.map((txt, i) => `
@@ -149,10 +167,8 @@ function loadLevel() {
             <span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>
             ${txt}
         </div>`).join('');
-    
     spawnItems();
     resetSnakePosition();
-    draw();
     startCountdown();
 }
 
@@ -172,7 +188,7 @@ function startCountdown() {
             if(loop) clearInterval(loop);
             loop = setInterval(gameStep, gameSpeed);
         }
-    }, 800);
+    }, 700);
 }
 
 function resetSnakePosition() {
@@ -190,8 +206,7 @@ function spawnItems() {
         } while(snake.some(s=>s.x==p.x && s.y==p.y) || targets.some(t=>t.x==p.x && t.y==p.y));
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
-    // Random chance for heart each level
-    heartBonus = (Math.random() > 0.4) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
+    heartBonus = (Math.random() > 0.5) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
 }
 
 function gameStep() {
@@ -209,12 +224,10 @@ function gameStep() {
         return;
     }
 
-    // Recover Heart
     if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) {
         if(lives < 5) lives++; heartBonus=null; updateUI();
     }
 
-    // Hit Answer
     let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
     if(tIdx !== -1 && !isProcessing) handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
 
@@ -226,15 +239,17 @@ function gameStep() {
 function handleAnswer(isCorrect) {
     isProcessing = true;
     targets = []; 
-    if(isCorrect) { score += 10; curSnakeLen++; } else { score -= 10; }
+    if(isCorrect) { score += 10; curSnakeLen++; } else { score -= 10; lives--; }
     
+    updateUI();
+    if(lives <= 0) return gameOver(false);
+
     const fbArea = document.getElementById('feedback-area');
-    document.getElementById('fb-status').innerText = isCorrect ? "✅ 答對了！" : "❌ 答錯了！";
+    document.getElementById('fb-status').innerText = isCorrect ? "✅ 答對了！" : "❌ 答錯了！扣生命與分數";
     fbArea.className = isCorrect ? "feedback-correct" : "feedback-wrong";
     fbArea.style.display = 'block';
-    updateUI();
 
-    isSafe = true; // Temporary invincibility while moving
+    isSafe = true; // Temporary invincibility
     curIdx++;
     setTimeout(() => {
         isProcessing = false; isSafe = false;
@@ -243,20 +258,17 @@ function handleAnswer(isCorrect) {
 }
 
 function draw() {
-    ctx.clearRect(0,0,480,480);
-    ctx.strokeStyle = "#f0f0f0";
-    for(let i=0; i<=grid; i++){ ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,480); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(480,i*sz); ctx.stroke(); }
-    
-    if(heartBonus){ ctx.font="20px Arial"; ctx.textAlign="center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
-    
+    ctx.clearRect(0,0,400,400);
+    ctx.strokeStyle = "#f3f3f3";
+    for(let i=0; i<=grid; i++){ ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(400,i*sz); ctx.stroke(); }
+    if(heartBonus){ ctx.font="18px Arial"; ctx.textAlign="center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
     targets.forEach(t => { 
         ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/2.2, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = "#fff"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4); 
+        ctx.fillStyle = "#fff"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4); 
     });
-    
     snake.forEach((s, i) => { 
         ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50":"#81c784"); 
-        if(isSafe) ctx.globalAlpha = 0.5; 
+        if(isSafe) ctx.globalAlpha = 0.4; 
         ctx.beginPath(); ctx.arc(s.x*sz+sz/2, s.y*sz+sz/2, sz/2.1, 0, Math.PI*2); ctx.fill(); 
         ctx.globalAlpha = 1.0; 
     });
@@ -265,15 +277,12 @@ function draw() {
 function togglePause() {
     if(inCountdown) return;
     const overlay = document.getElementById('ui-overlay');
-    if(isPaused) { 
-        loop = setInterval(gameStep, gameSpeed); isPaused=false; overlay.style.display='none'; 
-    } else { 
-        clearInterval(loop); isPaused=true; overlay.style.display='flex'; overlay.innerText = "已暫停"; 
-    }
+    if(isPaused) { loop = setInterval(gameStep, gameSpeed); isPaused=false; overlay.style.display='none'; }
+    else { clearInterval(loop); isPaused=true; overlay.style.display='flex'; overlay.innerText = "已暫停"; }
 }
 
 function updateUI() {
-    document.getElementById('ui-hearts').innerText = "❤️".repeat(lives) + "🖤".repeat(Math.max(0, 5-lives));
+    document.getElementById('ui-hearts').innerText = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 5-lives));
     document.getElementById('ui-score').innerText = score;
 }
 
