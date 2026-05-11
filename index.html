@@ -3,28 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健康生存挑戰 - 難度切換版</title>
+    <title>健康生存挑戰 - 完整導覽版</title>
     <style>
         :root { --primary-color: #2e7d32; --bg-color: #eef2f3; }
         body { margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        
         #app-box { background: #fff; border: 4px solid var(--primary-color); display: flex; width: 95vw; height: 90vh; max-width: 1200px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 15px; overflow: hidden; flex-direction: row; }
-        @media (max-width: 768px) { #app-box { flex-direction: column; height: 95vh; } #info-panel { flex: 0.5 !important; border-right: none !important; border-bottom: 2px solid #f0f0f0; } }
+        @media (max-width: 768px) { #app-box { flex-direction: column; height: 95vh; } #info-panel { flex: 0.6 !important; border-right: none !important; border-bottom: 2px solid #f0f0f0; } }
+        
         #info-panel { flex: 0.7; padding: 20px; border-right: 2px solid #f0f0f0; display: flex; flex-direction: column; justify-content: space-between; background: #fff; z-index: 5; overflow-y: auto; }
         #game-panel { flex: 1.3; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
+        
         .canvas-container { position: relative; width: 100%; max-width: 500px; aspect-ratio: 1 / 1; }
         canvas { width: 100%; height: 100%; background: #fff; border: 3px solid var(--primary-color); border-radius: 8px; display: block; }
+        
         #q-title { font-size: 1.1rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
         .opt-row { margin: 5px 0; font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; }
         .opt-label { width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.75rem; flex-shrink: 0; }
+        
         #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 1rem; font-weight: bold; min-height: 50px; }
         .feedback-correct { background: #e8f5e9; color: #2e7d32; }
         .feedback-wrong { background: #ffebee; color: #d32f2f; border-left: 5px solid #d32f2f; }
+        
         .status { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; font-weight: bold; }
         #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 4rem; font-weight: 900; color: var(--primary-color); background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 20; }
-        .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         
-        .difficulty-ctrl { display: flex; gap: 5px; margin-top: 10px; }
-        .difficulty-ctrl button { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        /* Start Screen Layout */
+        .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; box-sizing: border-box; }
+        .rules-box { text-align: left; background: #f9f9f9; padding: 20px; border-radius: 10px; border-left: 5px solid var(--primary-color); margin: 20px 0; max-width: 500px; font-size: 0.9rem; }
+        .rules-box b { color: var(--primary-color); }
+
+        /* Control Sidebar Section */
+        .control-guide { font-size: 0.8rem; background: #f0f4f0; padding: 10px; border-radius: 8px; margin-top: 10px; color: #444; border: 1px dashed #2e7d32; }
+        
+        .difficulty-ctrl { display: flex; gap: 5px; margin: 10px 0; }
+        .difficulty-ctrl button { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
         .active-diff { background: var(--primary-color) !important; color: white !important; border-color: var(--primary-color) !important; }
 
         .score-scale { width: 300px; height: 24px; background: #eee; border-radius: 12px; margin: 20px 0; position: relative; overflow: hidden; display: flex; border: 2px solid #ddd; }
@@ -33,34 +46,56 @@
         .s2 { width: 60%; background: #ff9800; } 
         .s3 { width: 20%; background: #4caf50; } 
         .indicator { position: absolute; top: 0; bottom: 0; width: 6px; background: #000; transition: left 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 3px; }
-        .btn-main { padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 5px; }
+        .btn-main { padding: 15px 40px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 10px; transition: transform 0.2s; }
+        .btn-main:hover { transform: scale(1.05); }
     </style>
 </head>
 <body>
 
 <div id="app-box">
     <div id="scr-start" class="full-screen">
-        <h1 style="color: var(--primary-color);">🐍 健康生存挑戰</h1>
-        <p id="load-status">載入數據中...</p>
-        <button id="b-start" class="btn-main" style="background:var(--primary-color)" onclick="gameInit(160)" disabled>開始遊戲</button>
-        <p style="font-size: 0.85rem; margin-top: 15px; color: #666;">❤️ 每 2 關出現一心 | 答錯身體變短 | 撞牆扣心</p>
+        <h1 style="color: var(--primary-color); margin-bottom: 0;">🐍 健康生存挑戰</h1>
+        <p style="color: #666;">學習健康知識，挑戰最長蛇身！</p>
+        
+        <div class="rules-box">
+            <b>📜 遊戲規則：</b>
+            <ul>
+                <li><b>答對問題：</b> 身體長度 +1，分數 +1。</li>
+                <li><b>答錯問題：</b> 身體縮短 -1 (若長度低於 3 則遊戲結束)。</li>
+                <li><b>碰撞障礙：</b> 撞牆或撞到自己會扣除 1 顆 <b>❤️ 生命</b>。</li>
+                <li><b>生命恢復：</b> 每 2 關會隨機出現一顆 ❤️，吃掉可恢復生命。</li>
+            </ul>
+            <b>🎮 操作方式：</b>
+            <ul>
+                <li>使用鍵盤 <b>上下左右 (方向鍵)</b> 控制移動。</li>
+                <li>按下 <b>空白鍵 (Space)</b> 可隨時暫停遊戲。</li>
+            </ul>
+        </div>
+
+        <button id="b-start" class="btn-main" style="background:var(--primary-color)" onclick="gameInit(160)" disabled>載入中...</button>
     </div>
 
     <div id="info-panel">
         <div>
-            <div id="q-title">正在載入...</div>
+            <div id="q-title">準備中...</div>
             <div id="opt-list"></div>
             <div id="feedback-area"></div>
         </div>
         
         <div>
-            <label style="font-size: 0.8rem; font-weight: bold;">難度切換 (即時生效):</label>
+            <div class="control-guide">
+                <b>⌨️ 遊戲操作：</b><br>
+                方向鍵：移動蛇身<br>
+                空白鍵：暫停遊戲
+            </div>
+
+            <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-top: 10px;">切換難度 (即時生效):</label>
             <div class="difficulty-ctrl">
                 <button id="d-220" onclick="changeSpeed(220)">簡單</button>
                 <button id="d-160" class="active-diff" onclick="changeSpeed(160)">中等</button>
                 <button id="d-100" onclick="changeSpeed(100)">困難</button>
             </div>
-            <button style="width:100%; margin-top:10px; padding:10px; cursor:pointer;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
+            <button style="width:100%; padding:10px; cursor:pointer; font-weight:bold; border-radius: 5px; border: 1px solid #999;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
         </div>
     </div>
 
@@ -106,10 +141,13 @@ window.onload = () => {
         .then(res => res.ok ? res.text() : Promise.reject())
         .then(text => {
             parseCSV(text);
-            document.getElementById('load-status').innerText = "數據載入成功！";
-            document.getElementById('b-start').disabled = false;
+            const btn = document.getElementById('b-start');
+            btn.innerText = "進入遊戲";
+            btn.disabled = false;
         })
-        .catch(() => { document.getElementById('load-status').innerText = "請確認伺服器有 data.csv"; });
+        .catch(() => { 
+            document.getElementById('b-start').innerText = "載入失敗 (無 data.csv)";
+        });
 };
 
 function parseCSV(text) {
@@ -120,7 +158,6 @@ function parseCSV(text) {
     });
 }
 
-// Mid-game speed change
 function changeSpeed(newSpeed) {
     gameSpeed = newSpeed;
     document.querySelectorAll('.difficulty-ctrl button').forEach(btn => btn.classList.remove('active-diff'));
@@ -140,8 +177,7 @@ function gameInit(speed) {
 function loadLevel() {
     if(curIdx >= POOL.length) return gameOver(true);
     updateUI();
-    isProcessing = false;
-    isSafe = false;
+    isProcessing = false; isSafe = false;
     
     const data = POOL[curIdx];
     document.getElementById('q-title').innerText = (curIdx+1) + ". " + data.q;
@@ -238,7 +274,6 @@ function handleAnswer(isCorrect) {
         loadLevel(); 
     } else {
         curSnakeLen--;
-        // Show correct answer explicitly
         const correctChar = data.ok;
         const correctText = data.a[correctChar.charCodeAt(0) - 65];
         fb.innerHTML = `❌ 答錯了！身體縮短<br>正確答案: (${correctChar}) ${correctText}`;
@@ -253,7 +288,7 @@ function handleAnswer(isCorrect) {
             fb.style.display = "none";
             curIdx++;
             loadLevel();
-        }, 2500); // Give player time to read the correct answer
+        }, 2500); 
     }
 }
 
