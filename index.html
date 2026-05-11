@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>健康自然貪食蛇</title>
+    <title>健康自然貪食蛇 - 修復版</title>
     <style>
         body { 
             margin: 0; background: #eef2f3; font-family: "Microsoft JhengHei", sans-serif; 
@@ -11,97 +11,87 @@
         }
         #app-box { 
             background: #fff; border: 5px solid #2e7d32; display: flex; 
-            width: 95vw; max-width: 1050px; height: 85vh; position: relative; 
+            width: 95vw; max-width: 1100px; height: 85vh; position: relative; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 20px; overflow: hidden;
         }
         #info-panel { 
-            flex: 0.7; padding: 25px; border-right: 2px solid #f0f0f0; 
+            flex: 0.6; padding: 25px; border-right: 2px solid #f0f0f0; 
             display: flex; flex-direction: column; justify-content: space-between;
+            background: #fff; z-index: 5;
         }
-        #q-title { font-size: 1.5rem; font-weight: 900; color: #1b5e20; margin-bottom: 15px; }
-        .opt-row { margin: 10px 0; font-size: 1.15rem; font-weight: bold; display: flex; align-items: center; }
-        .opt-label { width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 12px; font-size: 1rem; flex-shrink: 0; }
+        #q-title { font-size: 1.4rem; font-weight: 900; color: #1b5e20; margin-bottom: 15px; }
+        .opt-row { margin: 8px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; }
+        .opt-label { width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 12px; font-size: 0.9rem; flex-shrink: 0; }
         
-        .btn-area { display: flex; gap: 10px; }
-        .btn-side { 
-            flex: 1; padding: 12px 5px; border-radius: 10px; cursor: pointer; 
-            font-weight: bold; text-align: center; font-size: 0.95rem; transition: 0.2s;
+        #feedback-area { 
+            margin-top: 15px; padding: 15px; border-radius: 10px; display: none;
+            animation: fadeIn 0.3s;
         }
-        .btn-restart { background: #f0f4f0; color: #2e7d32; border: 2px solid #2e7d32; }
-        .btn-restart:hover { background: #2e7d32; color: white; }
-        .btn-pause { background: #fff8e1; color: #f57f17; border: 2px solid #f57f17; }
-        .btn-pause:hover { background: #f57f17; color: white; }
+        .feedback-correct { background: #e8f5e9; border-left: 5px solid #2e7d32; color: #1b5e20; }
+        .feedback-wrong { background: #ffebee; border-left: 5px solid #d32f2f; color: #b71c1c; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        #game-panel { flex: 1.3; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
-        canvas { background: #fff; border: 8px solid blue; border-radius: 10px; }
-        .status { width: 448px; display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.4rem; font-weight: 900; }
+        .btn-area { display: flex; gap: 10px; }
+        .btn-side { flex: 1; padding: 12px 5px; border-radius: 10px; cursor: pointer; font-weight: bold; text-align: center; font-size: 0.95rem; }
+        .btn-restart { background: #f0f4f0; color: #2e7d32; border: 2px solid #2e7d32; }
+        .btn-pause { background: #fff8e1; color: #f57f17; border: 2px solid #f57f17; }
+
+        #game-panel { flex: 1.4; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
+        canvas { background: #fff; border: 4px solid #2e7d32; border-radius: 10px; }
+        .status { width: 480px; display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.2rem; font-weight: 900; }
         
-        #pause-overlay { 
+        #ui-overlay { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 3rem; font-weight: 900; color: #f57f17; 
-            background: rgba(255,255,255,0.8); padding: 10px 30px; border-radius: 15px;
-            display: none; pointer-events: none; z-index: 10;
+            font-size: 5rem; font-weight: 900; color: #2e7d32; 
+            background: rgba(255,255,255,0.8); width: 100%; height: 100%;
+            display: none; align-items: center; justify-content: center; z-index: 20;
         }
 
         .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .game-desc { max-width: 650px; font-size: 1.1rem; color: #444; line-height: 1.6; margin: 15px 0; background: #f9f9f9; padding: 20px; border-radius: 15px; border-left: 5px solid #2e7d32; text-align: left; }
-        .btn-group { display: flex; gap: 20px; margin-top: 10px; }
-        .btn-main { padding: 12px 35px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; transition: 0.2s; }
-        .btn-easy { background: #4caf50; }
-        .btn-med { background: #ff9800; }
-        .btn-hard { background: #f44336; }
-        .btn-next { background: #2e7d32; padding: 12px 40px; font-size: 1.4rem; cursor: pointer; border: none; border-radius: 50px; color: white; font-weight: bold; }
+        .btn-main { padding: 12px 35px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; }
     </style>
 </head>
 <body>
 
 <div id="app-box">
     <div id="scr-start" class="full-screen">
-        <h1 style="font-size: 2.8rem; color: #2e7d32; margin-bottom: 5px;">🐍 自然健康貪食蛇</h1>
-        <div class="game-desc">
-            <b>遊戲規則：</b><br>
-            • 答對：<b>+10分</b> 且 <b>長度增加一格</b>。<br>
-            • 答錯：<b>-10分</b> (不扣心)。<br>
-            • 撞牆：<b>扣 1 顆心</b>。<br>
-            • 吃到 ❤️ 補血 (最高5顆)，吃到 🌟 加 10 分。
-        </div>
+        <h1 style="font-size: 2.5rem; color: #2e7d32;">🐍 30x30 健康冒險</h1>
+        <p>修正：吃到果實後立即消失，並提供短暫無敵時間。</p>
         <div class="btn-group">
-            <button class="btn-main btn-easy" onclick="gameInit(260)">簡單</button>
-            <button class="btn-main btn-med" onclick="gameInit(160)">中等</button>
-            <button class="btn-main btn-hard" onclick="gameInit(130)">困難</button>
+            <button class="btn-main" style="background:#4caf50" onclick="gameInit(180)">簡單</button>
+            <button class="btn-main" style="background:#ff9800" onclick="gameInit(130)">中等</button>
+            <button class="btn-main" style="background:#f44336" onclick="gameInit(90)">困難</button>
         </div>
     </div>
 
     <div id="info-panel">
         <div>
-            <div id="q-title">載入中...</div>
+            <div id="q-title">準備中...</div>
             <div id="opt-list"></div>
+            <div id="feedback-area">
+                <b id="fb-status"></b><br>
+                <span id="fb-note"></span>
+            </div>
         </div>
         <div class="btn-area">
-            <div class="btn-side btn-pause" id="ui-pause-btn" onclick="togglePause()">⏸️ 暫停</div>
-            <div class="btn-side btn-restart" onclick="backToMenu()">🔄 重選難度</div>
+            <div class="btn-side btn-pause" onclick="togglePause()">⏸️ [Space] 暫停</div>
+            <div class="btn-side btn-restart" onclick="backToMenu()">🔄 返回</div>
         </div>
     </div>
 
     <div id="game-panel">
-        <div id="pause-overlay">已暫停</div>
+        <div id="ui-overlay">3</div>
         <div class="status">
             <span id="ui-hearts" style="color: #ff1744;">❤️❤️❤️</span>
             <span style="color:#2e7d32">得分: <span id="ui-score">0</span></span>
         </div>
-        <canvas id="cvs" width="448" height="448"></canvas>
-    </div>
-
-    <div id="scr-msg" class="full-screen" style="display:none">
-        <h2 id="msg-header" style="font-size: 2.2rem;"></h2>
-        <p id="msg-body" style="font-size: 1.3rem; padding: 0 60px; margin-bottom: 20px; line-height: 1.6;"></p>
-        <button class="btn-next" onclick="proceed()">下一題</button>
+        <canvas id="cvs" width="480" height="480"></canvas>
     </div>
 
     <div id="scr-end" class="full-screen" style="display:none">
-        <h1 id="end-msg" style="font-size: 3rem;">遊戲結束</h1>
-        <div id="final-pts" style="font-size: 4rem; font-weight: 900; color: #2e7d32; margin: 10px 0;">0</div>
-        <button class="btn-next" onclick="backToMenu()">再玩一次</button>
+        <h1 id="end-msg">遊戲結束</h1>
+        <div id="final-pts" style="font-size: 4rem; font-weight: 900; color: #2e7d32;">0</div>
+        <button class="btn-main" style="background:#2e7d32" onclick="backToMenu()">再玩一次</button>
     </div>
 </div>
 
@@ -119,199 +109,186 @@ const POOL = [
     {q:"哪種食物鐵質較為豐富？", a:["白蘿蔔","紅鳳菜/菠菜","冬瓜","洋蔥"], ok:"B", n:"深色蔬菜是優質的植物性鐵質來源。"}
 ];
 
-let curIdx=0, score=0, lives=3, loop=null, gameSpeed=200;
+let curIdx=0, score=0, lives=3, loop=null, gameSpeed=150;
 let snake=[], dir={x:0, y:-1}, nextD={x:0, y:-1};
-let targets=[], heartBonus=null, starBonus=null, isPaused = false;
-let curSnakeLen = 3; 
+let targets=[], isPaused = false, inCountdown = false, isSafe = false, isProcessing = false;
+let curSnakeLen = 4;
 
 const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
-const sz=32, grid=14; 
+const sz=16, grid=30;
 
 function gameInit(speed) {
-    gameSpeed = speed; isPaused = false;
+    gameSpeed = speed; isPaused = false; isProcessing = false;
     document.getElementById('scr-start').style.display = 'none';
     document.getElementById('scr-end').style.display = 'none';
-    curIdx=0; score=0; lives=3; curSnakeLen = 3; 
+    curIdx=0; score=0; lives=3; curSnakeLen = 4;
     loadLevel();
 }
 
-function resetSnakePosition() {
-    let safe = false;
-    let headX, headY;
-    
-    while(!safe) {
-        headX = Math.floor(Math.random() * grid);
-        headY = Math.floor(Math.random() * (grid - curSnakeLen));
-        
-        let tooClose = targets.some(t => Math.abs(t.x - headX) + Math.abs(t.y - headY) < 4);
-        if (heartBonus && Math.abs(heartBonus.x - headX) + Math.abs(heartBonus.y - headY) < 4) tooClose = true;
-        if (starBonus && Math.abs(starBonus.x - headX) + Math.abs(starBonus.y - headY) < 4) tooClose = true;
-        
-        if(!tooClose) safe = true;
-    }
-
-    snake = [];
-    for(let i=0; i<curSnakeLen; i++) {
-        snake.push({x: headX, y: headY + i}); 
-    }
-    dir = {x:0, y:-1}; nextD = {x:0, y:-1};
-}
-
-function updateUI() {
-    document.getElementById('ui-hearts').innerText = "❤️".repeat(Math.max(0, lives)) + "🖤".repeat(Math.max(0, 5-lives));
-    document.getElementById('ui-score').innerText = score;
-}
-
 function loadLevel() {
-    if(curIdx >= 10) return gameOver(true);
+    if(curIdx >= POOL.length) return gameOver(true);
     updateUI();
+    document.getElementById('feedback-area').style.display = 'none';
+    
     const data = POOL[curIdx];
     document.getElementById('q-title').innerText = (curIdx+1) + ". " + data.q;
-    const colors = ["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"];
     document.getElementById('opt-list').innerHTML = data.a.map((txt, i) => `
         <div class="opt-row">
-            <span class="opt-label" style="background:${colors[i]}">${String.fromCharCode(65+i)}</span>
+            <span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>
             ${txt}
         </div>`).join('');
     
     spawnItems();
-    resetSnakePosition(); 
-    
-    if(loop) clearInterval(loop);
-    loop = setInterval(gameStep, gameSpeed);
+    resetSnakePosition();
+    draw();
+    startCountdown();
+}
+
+function startCountdown() {
+    inCountdown = true;
+    let count = 3;
+    const overlay = document.getElementById('ui-overlay');
+    overlay.style.display = 'flex';
+    overlay.style.color = '#2e7d32';
+    overlay.innerText = count;
+    const timer = setInterval(() => {
+        count--;
+        if (count > 0) overlay.innerText = count;
+        else {
+            clearInterval(timer);
+            overlay.style.display = 'none';
+            inCountdown = false;
+            if(loop) clearInterval(loop);
+            loop = setInterval(gameStep, gameSpeed);
+        }
+    }, 800);
+}
+
+function resetSnakePosition() {
+    let headX = 15, headY = 20;
+    snake = [];
+    for(let i=0; i<curSnakeLen; i++) snake.push({x: headX, y: headY + i});
+    dir = {x:0, y:-1}; nextD = {x:0, y:-1};
 }
 
 function spawnItems() {
-    targets = []; heartBonus = null; starBonus = null;
+    targets = [];
     const colors = ["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"];
-    
     for(let i=0; i<4; i++) {
         let p;
-        while(true) {
-            p = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)}; 
-            let overlaps = targets.some(t => Math.abs(t.x - p.x) + Math.abs(t.y - p.y) < 3);
-            if(!overlaps) break;
+        let overlap = true;
+        while(overlap) {
+            p = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)};
+            overlap = snake.some(s => s.x === p.x && s.y === p.y) || targets.some(t => t.x === p.x && t.y === p.y);
         }
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
-    
-    do {
-        heartBonus = {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)};
-    } while (targets.some(t => t.x == heartBonus.x && t.y == heartBonus.y));
-
-    do {
-        starBonus = {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)};
-    } while (targets.some(t => t.x == starBonus.x && t.y == starBonus.y) || (heartBonus.x == starBonus.x && heartBonus.y == starBonus.y));
 }
 
 function gameStep() {
-    if(isPaused) return;
+    if(isPaused || inCountdown) return;
     dir = nextD;
     let head = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
     
-    if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid) {
+    // Wall/Self Collision
+    if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid || (!isSafe && snake.some(s=>s.x==head.x && s.y==head.y))) {
         lives--; updateUI();
         if(lives <= 0) return gameOver(false);
-        resetSnakePosition(); return;
-    }
-
-    if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) { 
-        if(lives < 5) lives++; 
-        updateUI(); 
-        heartBonus=null; 
-    }
-    if(starBonus && head.x==starBonus.x && head.y==starBonus.y) { 
-        score += 10; 
-        updateUI(); 
-        starBonus=null; 
-    }
-
-    let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
-    if(tIdx !== -1) {
-        if(targets[tIdx].char == POOL[curIdx].ok) {
-            score += 10; 
-            curSnakeLen++; 
-            showResult(false);
-        } else {
-            score -= 10; 
-            updateUI(); 
-            showResult(true);
-        }
+        clearInterval(loop);
+        resetSnakePosition();
+        startCountdown();
         return;
     }
 
+    // Check Answer Targets
+    let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
+    if(tIdx !== -1 && !isProcessing) {
+        handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
+    }
+
     snake.unshift(head);
-    snake.pop(); 
+    if(snake.length > curSnakeLen) snake.pop(); 
     draw();
 }
 
+function handleAnswer(isCorrect) {
+    isProcessing = true; // Lock to prevent multi-hit
+    const data = POOL[curIdx];
+    targets = []; // CLEAR TARGETS IMMEDIATELY
+    
+    const fbArea = document.getElementById('feedback-area');
+    const fbStatus = document.getElementById('fb-status');
+    const fbNote = document.getElementById('fb-note');
+
+    if(isCorrect) {
+        score += 10; curSnakeLen++;
+        fbArea.className = "feedback-correct";
+        fbStatus.innerText = "✅ 答對了！+10分";
+    } else {
+        score -= 10;
+        fbArea.className = "feedback-wrong";
+        fbStatus.innerText = "❌ 答錯了！-10分";
+    }
+    fbNote.innerText = data.n;
+    fbArea.style.display = 'block';
+    updateUI();
+
+    isSafe = true; // Snake becomes ghost-like
+    
+    curIdx++;
+    if(curIdx < POOL.length) {
+        setTimeout(() => {
+            fbArea.style.display = 'none';
+            isSafe = false;
+            isProcessing = false;
+            // Refresh question and items while moving
+            const nextData = POOL[curIdx];
+            document.getElementById('q-title').innerText = (curIdx+1) + ". " + nextData.q;
+            document.getElementById('opt-list').innerHTML = nextData.a.map((txt, i) => `
+                <div class="opt-row"><span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>${txt}</div>`).join('');
+            spawnItems();
+        }, 3000);
+    } else {
+        setTimeout(() => gameOver(true), 2500);
+    }
+}
+
 function draw() {
-    ctx.clearRect(0,0,448,448);
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
-    for(let i=0; i<=grid; i++) {
-        ctx.beginPath(); ctx.moveTo(i*sz, 0); ctx.lineTo(i*sz, 448); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, i*sz); ctx.lineTo(448, i*sz); ctx.stroke();
+    ctx.clearRect(0,0,480,480);
+    ctx.strokeStyle = "#f3f3f3";
+    for(let i=0; i<=grid; i++){
+        ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,480); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(480,i*sz); ctx.stroke();
     }
     
+    // Draw Targets
     targets.forEach(t => {
-        ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/2.2, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.font = "bold 20px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4);
+        ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/1.8, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4);
     });
 
-    if(heartBonus) { ctx.font = "24px Arial"; ctx.textAlign = "center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
-    if(starBonus) { ctx.font = "24px Arial"; ctx.textAlign = "center"; ctx.fillText("🌟", starBonus.x*sz+sz/2, starBonus.y*sz+sz/1.2); }
-    
+    // Draw Snake
     snake.forEach((s, i) => {
-        const centerX = s.x * sz + sz / 2;
-        const centerY = s.y * sz + sz / 2;
-        let radius = sz / 2 - 2;
-        if (i > snake.length - 3) radius -= (i - (snake.length - 3)) * 3;
-
-        if (i === 0) {
-            ctx.fillStyle = "#1b5e20"; ctx.beginPath(); ctx.arc(centerX, centerY, radius + 2, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = "#ff1744"; ctx.lineWidth = 3; ctx.beginPath();
-            ctx.moveTo(centerX + dir.x * radius, centerY + dir.y * radius);
-            ctx.lineTo(centerX + dir.x * (radius + 10), centerY + dir.y * (radius + 10)); ctx.stroke();
-            ctx.fillStyle = "white"; const eyeOffset = 6;
-            let eyeX1, eyeY1, eyeX2, eyeY2;
-            if(dir.x !== 0) { eyeX1 = eyeX2 = centerX + dir.x * 5; eyeY1 = centerY - eyeOffset; eyeY2 = centerY + eyeOffset; }
-            else { eyeY1 = eyeY2 = centerY + dir.y * 5; eyeX1 = centerX - eyeOffset; eyeX2 = centerX + eyeOffset; }
-            ctx.beginPath(); ctx.arc(eyeX1, eyeY1, 4, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(eyeX2, eyeY2, 4, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(eyeX1 + dir.x*2, eyeY1 + dir.y*2, 2, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(eyeX2 + dir.x*2, eyeY2 + dir.y*2, 2, 0, Math.PI*2); ctx.fill();
-        } else {
-            ctx.fillStyle = (i % 2 === 0) ? "#4caf50" : "#66bb6a"; ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(centerX - 3, centerY - 3, radius/3, 0, Math.PI*2); ctx.fill();
-        }
+        ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50":"#81c784");
+        if(isSafe) ctx.globalAlpha = 0.5; // Visual feedback for Safe Mode
+        ctx.beginPath(); ctx.arc(s.x*sz+sz/2, s.y*sz+sz/2, sz/2, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1.0;
     });
-}
-
-function showResult(wrong) {
-    clearInterval(loop);
-    document.getElementById('scr-msg').style.display = 'flex';
-    const h = document.getElementById('msg-header');
-    h.innerText = wrong ? "❌ 答錯了 (-10分)" : "✅ 答對了 (+10分)";
-    h.style.color = wrong ? "#f44336" : "#2e7d32";
-    document.getElementById('msg-body').innerText = POOL[curIdx].n;
-}
-
-function proceed() {
-    document.getElementById('scr-msg').style.display = 'none';
-    curIdx++; loadLevel();
 }
 
 function togglePause() {
-    if(isPaused) { loop = setInterval(gameStep, gameSpeed); isPaused=false; document.getElementById('pause-overlay').style.display='none'; }
-    else { clearInterval(loop); isPaused=true; document.getElementById('pause-overlay').style.display='block'; }
+    if(inCountdown) return;
+    const overlay = document.getElementById('ui-overlay');
+    if(isPaused) { 
+        loop = setInterval(gameStep, gameSpeed); isPaused=false; overlay.style.display='none';
+    } else { 
+        clearInterval(loop); isPaused=true; overlay.style.display='flex'; overlay.innerText = "已暫停"; overlay.style.color = "#f57f17";
+    }
 }
 
-function backToMenu() {
-    clearInterval(loop);
-    document.getElementById('scr-start').style.display = 'flex';
-    document.getElementById('scr-end').style.display = 'none';
-    document.getElementById('scr-msg').style.display = 'none';
+function updateUI() {
+    document.getElementById('ui-hearts').innerText = "❤️".repeat(lives) + "🖤".repeat(3-lives);
+    document.getElementById('ui-score').innerText = score;
 }
 
 function gameOver(win) {
@@ -321,13 +298,19 @@ function gameOver(win) {
     document.getElementById('final-pts').innerText = score;
 }
 
+function backToMenu() {
+    clearInterval(loop);
+    document.getElementById('scr-start').style.display = 'flex';
+    document.getElementById('scr-end').style.display = 'none';
+}
+
 window.onkeydown = e => {
-    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) {
+    if(e.code === "Space") { e.preventDefault(); togglePause(); }
+    const keys = {"ArrowUp":{x:0,y:-1},"ArrowDown":{x:0,y:1},"ArrowLeft":{x:-1,y:0},"ArrowRight":{x:1,y:0}};
+    if(keys[e.key]) {
         e.preventDefault();
-        if(e.key=="ArrowUp" && dir.y!=1) nextD={x:0, y:-1};
-        else if(e.key=="ArrowDown" && dir.y!=-1) nextD={x:0, y:1};
-        else if(e.key=="ArrowLeft" && dir.x!=1) nextD={x:-1, y:0};
-        else if(e.key=="ArrowRight" && dir.x!=-1) nextD={x:1, y:0};
+        const cur = keys[e.key];
+        if(cur.x !== -dir.x || cur.y !== -dir.y) nextD = cur;
     }
 };
 </script>
