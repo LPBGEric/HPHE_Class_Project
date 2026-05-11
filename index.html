@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健康生存挑戰 - 週期心心版</title>
+    <title>健康生存挑戰 - 難度切換版</title>
     <style>
         :root { --primary-color: #2e7d32; --bg-color: #eef2f3; }
         body { margin: 0; background: var(--bg-color); font-family: "Microsoft JhengHei", sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
@@ -13,22 +13,25 @@
         #game-panel { flex: 1.3; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
         .canvas-container { position: relative; width: 100%; max-width: 500px; aspect-ratio: 1 / 1; }
         canvas { width: 100%; height: 100%; background: #fff; border: 3px solid var(--primary-color); border-radius: 8px; display: block; }
-        #q-title { font-size: 1.2rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
-        .opt-row { margin: 5px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; }
-        .opt-label { width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.8rem; flex-shrink: 0; }
-        #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 1rem; font-weight: bold; }
+        #q-title { font-size: 1.1rem; font-weight: 900; color: #1b5e20; margin-bottom: 10px; }
+        .opt-row { margin: 5px 0; font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; padding: 5px; border-radius: 5px; }
+        .opt-label { width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 10px; font-size: 0.75rem; flex-shrink: 0; }
+        #feedback-area { margin-top: 10px; padding: 12px; border-radius: 8px; display: none; font-size: 1rem; font-weight: bold; min-height: 50px; }
         .feedback-correct { background: #e8f5e9; color: #2e7d32; }
         .feedback-wrong { background: #ffebee; color: #d32f2f; border-left: 5px solid #d32f2f; }
         .status { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 1.1rem; font-weight: bold; }
         #ui-overlay { position: absolute; top:0; left:0; width:100%; height:100%; font-size: 4rem; font-weight: 900; color: var(--primary-color); background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 20; }
         .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
         
-        /* End Screen UI */
+        .difficulty-ctrl { display: flex; gap: 5px; margin-top: 10px; }
+        .difficulty-ctrl button { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .active-diff { background: var(--primary-color) !important; color: white !important; border-color: var(--primary-color) !important; }
+
         .score-scale { width: 300px; height: 24px; background: #eee; border-radius: 12px; margin: 20px 0; position: relative; overflow: hidden; display: flex; border: 2px solid #ddd; }
         .section { height: 100%; }
-        .s1 { width: 20%; background: #f44336; } /* 0-10 */
-        .s2 { width: 60%; background: #ff9800; } /* 11-40 */
-        .s3 { width: 20%; background: #4caf50; } /* 41-50 */
+        .s1 { width: 20%; background: #f44336; } 
+        .s2 { width: 60%; background: #ff9800; } 
+        .s3 { width: 20%; background: #4caf50; } 
         .indicator { position: absolute; top: 0; bottom: 0; width: 6px; background: #000; transition: left 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 3px; }
         .btn-main { padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 5px; }
     </style>
@@ -39,21 +42,26 @@
     <div id="scr-start" class="full-screen">
         <h1 style="color: var(--primary-color);">🐍 健康生存挑戰</h1>
         <p id="load-status">載入數據中...</p>
-        <div class="btn-group">
-            <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(220)" disabled>簡單</button>
-            <button id="b-med" class="btn-main" style="background:#ff9800" onclick="gameInit(160)" disabled>中等</button>
-            <button id="b-hard" class="btn-main" style="background:#f44336" onclick="gameInit(100)" disabled>困難</button>
-        </div>
-        <p style="font-size: 0.85rem; margin-top: 15px; color: #666;">❤️ 每 2 關出現一次 | 答錯身體變短 | 撞牆扣心</p>
+        <button id="b-start" class="btn-main" style="background:var(--primary-color)" onclick="gameInit(160)" disabled>開始遊戲</button>
+        <p style="font-size: 0.85rem; margin-top: 15px; color: #666;">❤️ 每 2 關出現一心 | 答錯身體變短 | 撞牆扣心</p>
     </div>
 
     <div id="info-panel">
         <div>
-            <div id="q-title">請選擇難度</div>
+            <div id="q-title">正在載入...</div>
             <div id="opt-list"></div>
             <div id="feedback-area"></div>
         </div>
-        <button style="padding:10px; cursor:pointer; font-weight:bold;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
+        
+        <div>
+            <label style="font-size: 0.8rem; font-weight: bold;">難度切換 (即時生效):</label>
+            <div class="difficulty-ctrl">
+                <button id="d-220" onclick="changeSpeed(220)">簡單</button>
+                <button id="d-160" class="active-diff" onclick="changeSpeed(160)">中等</button>
+                <button id="d-100" onclick="changeSpeed(100)">困難</button>
+            </div>
+            <button style="width:100%; margin-top:10px; padding:10px; cursor:pointer;" onclick="togglePause()">⏸️ 暫停 / 繼續</button>
+        </div>
     </div>
 
     <div id="game-panel">
@@ -79,14 +87,13 @@
             <div id="indicator" class="indicator" style="left: 0%;"></div>
         </div>
         <div id="rank-text" style="font-weight:bold; font-size: 1.6rem; color: #333; margin-bottom: 20px;"></div>
-        
         <button class="btn-main" style="background:var(--primary-color)" onclick="location.reload()">重新挑戰</button>
     </div>
 </div>
 
 <script>
 let POOL = []; 
-let curIdx=0, score=0, lives=3, loop=null, gameSpeed=150;
+let curIdx=0, score=0, lives=3, loop=null, gameSpeed=160;
 let snake=[], dir={x:0, y:-1}, nextD={x:0, y:-1};
 let targets=[], heartBonus=null, isPaused = false, inCountdown = false, isSafe = false, isProcessing = false;
 let curSnakeLen = 5; 
@@ -100,7 +107,7 @@ window.onload = () => {
         .then(text => {
             parseCSV(text);
             document.getElementById('load-status').innerText = "數據載入成功！";
-            document.querySelectorAll('.btn-main').forEach(b => b.disabled = false);
+            document.getElementById('b-start').disabled = false;
         })
         .catch(() => { document.getElementById('load-status').innerText = "請確認伺服器有 data.csv"; });
 };
@@ -111,6 +118,17 @@ function parseCSV(text) {
         const p = l.split(',');
         return { q: p[0], a: [p[1], p[2], p[3], p[4]], ok: p[5]?.trim().toUpperCase() || "A" };
     });
+}
+
+// Mid-game speed change
+function changeSpeed(newSpeed) {
+    gameSpeed = newSpeed;
+    document.querySelectorAll('.difficulty-ctrl button').forEach(btn => btn.classList.remove('active-diff'));
+    document.getElementById('d-' + newSpeed).classList.add('active-diff');
+    if(loop && !isPaused && !inCountdown) {
+        clearInterval(loop);
+        loop = setInterval(gameStep, gameSpeed);
+    }
 }
 
 function gameInit(speed) {
@@ -170,16 +188,12 @@ function spawnItems() {
         } while(snake.some(s=>s.x==p.x && s.y==p.y) || targets.some(t=>t.x==p.x && t.y==p.y));
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
-    
-    // Heart spawns every 2 levels (Level 2, 4, 6...)
     if ((curIdx + 1) % 2 === 0) {
         let hp;
         do { hp = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)};
         } while(snake.some(s=>s.x==hp.x && s.y==hp.y) || targets.some(t=>t.x==hp.x && t.y==hp.y));
         heartBonus = hp;
-    } else {
-        heartBonus = null;
-    }
+    } else { heartBonus = null; }
 }
 
 function gameStep() {
@@ -187,10 +201,8 @@ function gameStep() {
     dir = nextD;
     let head = {x: snake[0].x+dir.x, y: snake[0].y+dir.y};
     
-    // Bumping wall or self
     if(head.x<0 || head.x>=grid || head.y<0 || head.y>=grid || (!isSafe && snake.some(s=>s.x==head.x && s.y==head.y))) {
-        lives--;
-        updateUI();
+        lives--; updateUI();
         if(lives <= 0) return gameOver(false);
         clearInterval(loop); loop = null;
         resetSnakePosition();
@@ -198,11 +210,8 @@ function gameStep() {
         return;
     }
 
-    // Eating heart
     if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) {
-        if(lives < 5) lives++; 
-        heartBonus=null; 
-        updateUI();
+        if(lives < 5) lives++; heartBonus=null; updateUI();
     }
 
     let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
@@ -217,6 +226,7 @@ function handleAnswer(isCorrect) {
     isProcessing = true;
     targets = []; 
     const fb = document.getElementById('feedback-area');
+    const data = POOL[curIdx];
     
     if(isCorrect) {
         score += 1; curSnakeLen++; 
@@ -227,20 +237,23 @@ function handleAnswer(isCorrect) {
         curIdx++;
         loadLevel(); 
     } else {
-        curSnakeLen--; // Shrink on wrong answer
-        fb.innerText = `❌ 答錯了！身體縮短 (正確答案: ${POOL[curIdx].ok})`;
+        curSnakeLen--;
+        // Show correct answer explicitly
+        const correctChar = data.ok;
+        const correctText = data.a[correctChar.charCodeAt(0) - 65];
+        fb.innerHTML = `❌ 答錯了！身體縮短<br>正確答案: (${correctChar}) ${correctText}`;
         fb.className = "feedback-wrong";
         fb.style.display = "block";
         
         updateUI();
-        if(curSnakeLen < 3) return gameOver(false); // Lost due to being too short
+        if(curSnakeLen < 3) return gameOver(false);
 
         isSafe = true;
         setTimeout(() => {
             fb.style.display = "none";
             curIdx++;
             loadLevel();
-        }, 1500);
+        }, 2500); // Give player time to read the correct answer
     }
 }
 
@@ -248,23 +261,11 @@ function draw() {
     ctx.clearRect(0,0,400,400);
     ctx.strokeStyle = "#f3f3f3";
     for(let i=0; i<=grid; i++){ ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,400); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(400,i*sz); ctx.stroke(); }
-    
-    // Draw Heart Emoji
-    if(heartBonus){ 
-        ctx.font="18px Arial"; 
-        ctx.textAlign="center"; 
-        ctx.textBaseline="middle";
-        ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/2 + 2); 
-    }
-    
-    // Draw Answer Targets
+    if(heartBonus){ ctx.font="18px Arial"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/2 + 2); }
     targets.forEach(t => { 
         ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/2.2, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = "#fff"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center"; ctx.textBaseline="middle";
-        ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/2 + 1); 
+        ctx.fillStyle = "#fff"; ctx.font = "bold 11px Arial"; ctx.textAlign = "center"; ctx.textBaseline="middle"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/2 + 1); 
     });
-    
-    // Draw Snake
     snake.forEach((s, i) => { 
         ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50" : "#81c784"); 
         if(isSafe) ctx.globalAlpha = 0.4; 
@@ -291,21 +292,12 @@ function gameOver(win) {
     document.getElementById('scr-end').style.display = 'flex';
     document.getElementById('final-len').innerText = curSnakeLen;
     document.getElementById('final-score').innerText = score;
-    
     let rank = "";
-    let posPercent = (score / 50) * 100; // Map score 0-50 to 0-100%
-    
-    if(score <= 10) {
-        rank = "你的健康知識不足...";
-    } else if (score <= 40) {
-        rank = "很棒！";
-    } else {
-        rank = "太厲害了！";
-    }
-    
+    if(score <= 10) rank = "你的健康知識不足...";
+    else if (score <= 40) rank = "很棒！";
+    else rank = "太厲害了！";
     document.getElementById('rank-text').innerText = rank;
-    // Cap indicator within visual bounds
-    document.getElementById('indicator').style.left = Math.min(Math.max(posPercent, 2), 95) + "%";
+    document.getElementById('indicator').style.left = Math.min(Math.max((score / 50) * 100, 2), 95) + "%";
 }
 
 window.onkeydown = e => {
