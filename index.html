@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>健康自然貪食蛇 - 修復版</title>
+    <title>健康自然貪食蛇 - 伺服器數據版</title>
     <style>
         body { 
             margin: 0; background: #eef2f3; font-family: "Microsoft JhengHei", sans-serif; 
@@ -11,62 +11,55 @@
         }
         #app-box { 
             background: #fff; border: 5px solid #2e7d32; display: flex; 
-            width: 95vw; max-width: 1100px; height: 85vh; position: relative; 
+            width: 95vw; max-width: 1000px; height: 85vh; position: relative; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 20px; overflow: hidden;
         }
         #info-panel { 
-            flex: 0.6; padding: 25px; border-right: 2px solid #f0f0f0; 
+            flex: 0.8; padding: 25px; border-right: 2px solid #f0f0f0; 
             display: flex; flex-direction: column; justify-content: space-between;
             background: #fff; z-index: 5;
         }
         #q-title { font-size: 1.4rem; font-weight: 900; color: #1b5e20; margin-bottom: 15px; }
-        .opt-row { margin: 8px 0; font-size: 1rem; font-weight: bold; display: flex; align-items: center; }
-        .opt-label { width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 12px; font-size: 0.9rem; flex-shrink: 0; }
+        .opt-row { margin: 8px 0; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; }
+        .opt-label { width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; margin-right: 12px; font-size: 0.9rem; flex-shrink: 0; }
         
-        #feedback-area { 
-            margin-top: 15px; padding: 15px; border-radius: 10px; display: none;
-            animation: fadeIn 0.3s;
-        }
+        #feedback-area { margin-top: 15px; padding: 15px; border-radius: 10px; display: none; animation: fadeIn 0.3s; }
         .feedback-correct { background: #e8f5e9; border-left: 5px solid #2e7d32; color: #1b5e20; }
         .feedback-wrong { background: #ffebee; border-left: 5px solid #d32f2f; color: #b71c1c; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .btn-area { display: flex; gap: 10px; }
-        .btn-side { flex: 1; padding: 12px 5px; border-radius: 10px; cursor: pointer; font-weight: bold; text-align: center; font-size: 0.95rem; }
-        .btn-restart { background: #f0f4f0; color: #2e7d32; border: 2px solid #2e7d32; }
-        .btn-pause { background: #fff8e1; color: #f57f17; border: 2px solid #f57f17; }
-
-        #game-panel { flex: 1.4; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
+        .btn-side { flex: 1; padding: 12px 5px; border-radius: 10px; cursor: pointer; font-weight: bold; text-align: center; border: 1px solid #ccc; background: #fff;}
+        
+        #game-panel { flex: 1.2; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fafafa; position: relative; }
         canvas { background: #fff; border: 4px solid #2e7d32; border-radius: 10px; }
         .status { width: 480px; display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 1.2rem; font-weight: 900; }
         
-        #ui-overlay { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 5rem; font-weight: 900; color: #2e7d32; 
-            background: rgba(255,255,255,0.8); width: 100%; height: 100%;
-            display: none; align-items: center; justify-content: center; z-index: 20;
-        }
+        #ui-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 5rem; font-weight: 900; color: #2e7d32; background: rgba(255,255,255,0.8); width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 20; }
 
         .full-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: white; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .btn-main { padding: 12px 35px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; }
+        .btn-main { padding: 12px 35px; font-size: 1.3rem; cursor: pointer; border: none; border-radius: 50px; font-weight: bold; color: white; margin: 10px; transition: 0.2s; }
+        .btn-main:disabled { background: #ccc !important; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <div id="app-box">
     <div id="scr-start" class="full-screen">
-        <h1 style="font-size: 2.5rem; color: #2e7d32;">🐍 30x30 健康冒險</h1>
-        <p>修正：吃到果實後立即消失，並提供短暫無敵時間。</p>
+        <h1 style="color: #2e7d32; font-size: 2.5rem;">🐍 20x20 健康冒險</h1>
+        <p id="load-status">正在從伺服器載入題目...</p>
+
         <div class="btn-group">
-            <button class="btn-main" style="background:#4caf50" onclick="gameInit(180)">簡單</button>
-            <button class="btn-main" style="background:#ff9800" onclick="gameInit(130)">中等</button>
-            <button class="btn-main" style="background:#f44336" onclick="gameInit(90)">困難</button>
+            <button id="b-easy" class="btn-main" style="background:#4caf50" onclick="gameInit(200)" disabled>簡單</button>
+            <button id="b-med" class="btn-main" style="background:#ff9800" onclick="gameInit(150)" disabled>中等</button>
+            <button id="b-hard" class="btn-main" style="background:#f44336" onclick="gameInit(100)" disabled>困難</button>
         </div>
+        <p style="font-size: 0.9rem; color: #666;">[Space] 暫停 | ❤️ 恢復體力</p>
     </div>
 
     <div id="info-panel">
         <div>
-            <div id="q-title">準備中...</div>
+            <div id="q-title">載入中...</div>
             <div id="opt-list"></div>
             <div id="feedback-area">
                 <b id="fb-status"></b><br>
@@ -74,8 +67,8 @@
             </div>
         </div>
         <div class="btn-area">
-            <div class="btn-side btn-pause" onclick="togglePause()">⏸️ [Space] 暫停</div>
-            <div class="btn-side btn-restart" onclick="backToMenu()">🔄 返回</div>
+            <div class="btn-side" onclick="togglePause()">⏸️ 暫停</div>
+            <div class="btn-side" onclick="location.reload()">🔄 重啟</div>
         </div>
     </div>
 
@@ -91,37 +84,56 @@
     <div id="scr-end" class="full-screen" style="display:none">
         <h1 id="end-msg">遊戲結束</h1>
         <div id="final-pts" style="font-size: 4rem; font-weight: 900; color: #2e7d32;">0</div>
-        <button class="btn-main" style="background:#2e7d32" onclick="backToMenu()">再玩一次</button>
+        <button class="btn-main" style="background:#2e7d32" onclick="location.reload()">再玩一次</button>
     </div>
 </div>
 
 <script>
-const POOL = [
-    {q:"「我的餐盤」每餐水果建議量？", a:["一個拳頭大","兩根香蕉","三碗份量","隨便吃"], ok:"A", n:"建議每餐攝取一個拳頭大的水果。"},
-    {q:"運動後補充什麼最能修復肌肉？", a:["純油脂","優質蛋白質","含糖飲料","冰塊"], ok:"B", n:"蛋白質是修復肌肉的主要原料。"},
-    {q:"預防骨質疏鬆應多補充什麼？", a:["鈉","鈣質豐富食物","糖分","鐵質"], ok: "B", n:"鈣質是骨骼健康的基礎。"},
-    {q:"健康的減重速度建議每週？", a:["0.5-1公斤","5公斤","10公斤","不吃東西"], ok:"A", n:"每週0.5-1kg最能持久且不傷身。"},
-    {q:"關於補水觀念，何者正確？", a:["渴了再喝","定時少量補水","渴了吃冰","不必喝水"], ok:"B", n:"應主動定時定量補充足夠水分。"},
-    {q:"全穀雜糧（如糙米）的好處？", a:["顏色白","纖維與營養豐富","比較甜","比較便宜"], ok:"B", n:"全穀類比精製白米營養價值更高。"},
-    {q:"成人每週建議中強度運動量？", a:["10分鐘","150分鐘以上","1000分鐘","不必運動"], ok:"B", n:"每週150分鐘運動能促進心血管健康。"},
-    {q:"哪種油含較多優質脂肪酸？", a:["豬油","植物油/堅果油","奶油","椰子油"], ok:"B", n:"植物性油含有優質不飽和脂肪酸。"},
-    {q:"「333運動法」指每週運動幾次？", a:["1次","3次","5次","7次"], ok:"B", n:"333是指每週3次、每次30分鐘、心跳達130下。"},
-    {q:"哪種食物鐵質較為豐富？", a:["白蘿蔔","紅鳳菜/菠菜","冬瓜","洋蔥"], ok:"B", n:"深色蔬菜是優質的植物性鐵質來源。"}
-];
-
+let POOL = []; 
 let curIdx=0, score=0, lives=3, loop=null, gameSpeed=150;
 let snake=[], dir={x:0, y:-1}, nextD={x:0, y:-1};
-let targets=[], isPaused = false, inCountdown = false, isSafe = false, isProcessing = false;
-let curSnakeLen = 4;
+let targets=[], heartBonus=null, isPaused = false, inCountdown = false, isSafe = false, isProcessing = false;
+let curSnakeLen = 3;
 
 const canvas=document.getElementById('cvs'), ctx=canvas.getContext('2d');
-const sz=16, grid=30;
+const sz=24, grid=20; 
+
+// 1. Fetch data.csv from server on load
+window.onload = () => {
+    fetch('data.csv')
+        .then(response => {
+            if (!response.ok) throw new Error("找不到 data.csv 檔案");
+            return response.text();
+        })
+        .then(text => {
+            parseCSV(text);
+            document.getElementById('load-status').innerText = "題目載入成功！請選擇難度：";
+            document.querySelectorAll('.btn-main').forEach(b => b.disabled = false);
+        })
+        .catch(err => {
+            document.getElementById('load-status').innerText = "錯誤: " + err.message;
+            document.getElementById('load-status').style.color = "red";
+        });
+};
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/);
+    POOL = lines.filter(line => line.trim() !== "").map(line => {
+        const p = line.split(',');
+        // Expected: q, a1, a2, a3, a4, correctAnswer
+        return {
+            q: p[0],
+            a: [p[1], p[2], p[3], p[4]],
+            ok: p[5]?.trim().toUpperCase() || "A"
+        };
+    });
+}
 
 function gameInit(speed) {
     gameSpeed = speed; isPaused = false; isProcessing = false;
     document.getElementById('scr-start').style.display = 'none';
     document.getElementById('scr-end').style.display = 'none';
-    curIdx=0; score=0; lives=3; curSnakeLen = 4;
+    curIdx=0; score=0; lives=3; curSnakeLen = 3;
     loadLevel();
 }
 
@@ -149,7 +161,6 @@ function startCountdown() {
     let count = 3;
     const overlay = document.getElementById('ui-overlay');
     overlay.style.display = 'flex';
-    overlay.style.color = '#2e7d32';
     overlay.innerText = count;
     const timer = setInterval(() => {
         count--;
@@ -165,9 +176,8 @@ function startCountdown() {
 }
 
 function resetSnakePosition() {
-    let headX = 15, headY = 20;
     snake = [];
-    for(let i=0; i<curSnakeLen; i++) snake.push({x: headX, y: headY + i});
+    for(let i=0; i<curSnakeLen; i++) snake.push({x: 10, y: 12 + i});
     dir = {x:0, y:-1}; nextD = {x:0, y:-1};
 }
 
@@ -176,13 +186,12 @@ function spawnItems() {
     const colors = ["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"];
     for(let i=0; i<4; i++) {
         let p;
-        let overlap = true;
-        while(overlap) {
-            p = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)};
-            overlap = snake.some(s => s.x === p.x && s.y === p.y) || targets.some(t => t.x === p.x && t.y === p.y);
-        }
+        do { p = {x:Math.floor(Math.random()*grid), y:Math.floor(Math.random()*grid)};
+        } while(snake.some(s=>s.x==p.x && s.y==p.y) || targets.some(t=>t.x==p.x && t.y==p.y));
         targets.push({x:p.x, y:p.y, char:String.fromCharCode(65+i), color:colors[i]});
     }
+    // Random chance for heart each level
+    heartBonus = (Math.random() > 0.4) ? {x: Math.floor(Math.random()*grid), y: Math.floor(Math.random()*grid)} : null;
 }
 
 function gameStep() {
@@ -200,11 +209,14 @@ function gameStep() {
         return;
     }
 
-    // Check Answer Targets
-    let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
-    if(tIdx !== -1 && !isProcessing) {
-        handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
+    // Recover Heart
+    if(heartBonus && head.x==heartBonus.x && head.y==heartBonus.y) {
+        if(lives < 5) lives++; heartBonus=null; updateUI();
     }
+
+    // Hit Answer
+    let tIdx = targets.findIndex(t => t.x==head.x && t.y==head.y);
+    if(tIdx !== -1 && !isProcessing) handleAnswer(targets[tIdx].char === POOL[curIdx].ok);
 
     snake.unshift(head);
     if(snake.length > curSnakeLen) snake.pop(); 
@@ -212,67 +224,41 @@ function gameStep() {
 }
 
 function handleAnswer(isCorrect) {
-    isProcessing = true; // Lock to prevent multi-hit
-    const data = POOL[curIdx];
-    targets = []; // CLEAR TARGETS IMMEDIATELY
+    isProcessing = true;
+    targets = []; 
+    if(isCorrect) { score += 10; curSnakeLen++; } else { score -= 10; }
     
     const fbArea = document.getElementById('feedback-area');
-    const fbStatus = document.getElementById('fb-status');
-    const fbNote = document.getElementById('fb-note');
-
-    if(isCorrect) {
-        score += 10; curSnakeLen++;
-        fbArea.className = "feedback-correct";
-        fbStatus.innerText = "✅ 答對了！+10分";
-    } else {
-        score -= 10;
-        fbArea.className = "feedback-wrong";
-        fbStatus.innerText = "❌ 答錯了！-10分";
-    }
-    fbNote.innerText = data.n;
+    document.getElementById('fb-status').innerText = isCorrect ? "✅ 答對了！" : "❌ 答錯了！";
+    fbArea.className = isCorrect ? "feedback-correct" : "feedback-wrong";
     fbArea.style.display = 'block';
     updateUI();
 
-    isSafe = true; // Snake becomes ghost-like
-    
+    isSafe = true; // Temporary invincibility while moving
     curIdx++;
-    if(curIdx < POOL.length) {
-        setTimeout(() => {
-            fbArea.style.display = 'none';
-            isSafe = false;
-            isProcessing = false;
-            // Refresh question and items while moving
-            const nextData = POOL[curIdx];
-            document.getElementById('q-title').innerText = (curIdx+1) + ". " + nextData.q;
-            document.getElementById('opt-list').innerHTML = nextData.a.map((txt, i) => `
-                <div class="opt-row"><span class="opt-label" style="background:${["#d32f2f", "#1976d2", "#f57c00", "#7b1fa2"][i]}">${String.fromCharCode(65+i)}</span>${txt}</div>`).join('');
-            spawnItems();
-        }, 3000);
-    } else {
-        setTimeout(() => gameOver(true), 2500);
-    }
+    setTimeout(() => {
+        isProcessing = false; isSafe = false;
+        loadLevel();
+    }, 2000);
 }
 
 function draw() {
     ctx.clearRect(0,0,480,480);
-    ctx.strokeStyle = "#f3f3f3";
-    for(let i=0; i<=grid; i++){
-        ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,480); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(480,i*sz); ctx.stroke();
-    }
+    ctx.strokeStyle = "#f0f0f0";
+    for(let i=0; i<=grid; i++){ ctx.beginPath(); ctx.moveTo(i*sz,0); ctx.lineTo(i*sz,480); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,i*sz); ctx.lineTo(480,i*sz); ctx.stroke(); }
     
-    // Draw Targets
-    targets.forEach(t => {
-        ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/1.8, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.font = "bold 10px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4);
+    if(heartBonus){ ctx.font="20px Arial"; ctx.textAlign="center"; ctx.fillText("❤️", heartBonus.x*sz+sz/2, heartBonus.y*sz+sz/1.2); }
+    
+    targets.forEach(t => { 
+        ctx.fillStyle = t.color; ctx.beginPath(); ctx.arc(t.x*sz+sz/2, t.y*sz+sz/2, sz/2.2, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = "#fff"; ctx.font = "bold 12px Arial"; ctx.textAlign = "center"; ctx.fillText(t.char, t.x*sz+sz/2, t.y*sz+sz/1.4); 
     });
-
-    // Draw Snake
-    snake.forEach((s, i) => {
-        ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50":"#81c784");
-        if(isSafe) ctx.globalAlpha = 0.5; // Visual feedback for Safe Mode
-        ctx.beginPath(); ctx.arc(s.x*sz+sz/2, s.y*sz+sz/2, sz/2, 0, Math.PI*2); ctx.fill();
-        ctx.globalAlpha = 1.0;
+    
+    snake.forEach((s, i) => { 
+        ctx.fillStyle = (i === 0) ? "#1b5e20" : (i%2==0 ? "#4caf50":"#81c784"); 
+        if(isSafe) ctx.globalAlpha = 0.5; 
+        ctx.beginPath(); ctx.arc(s.x*sz+sz/2, s.y*sz+sz/2, sz/2.1, 0, Math.PI*2); ctx.fill(); 
+        ctx.globalAlpha = 1.0; 
     });
 }
 
@@ -280,38 +266,28 @@ function togglePause() {
     if(inCountdown) return;
     const overlay = document.getElementById('ui-overlay');
     if(isPaused) { 
-        loop = setInterval(gameStep, gameSpeed); isPaused=false; overlay.style.display='none';
+        loop = setInterval(gameStep, gameSpeed); isPaused=false; overlay.style.display='none'; 
     } else { 
-        clearInterval(loop); isPaused=true; overlay.style.display='flex'; overlay.innerText = "已暫停"; overlay.style.color = "#f57f17";
+        clearInterval(loop); isPaused=true; overlay.style.display='flex'; overlay.innerText = "已暫停"; 
     }
 }
 
 function updateUI() {
-    document.getElementById('ui-hearts').innerText = "❤️".repeat(lives) + "🖤".repeat(3-lives);
+    document.getElementById('ui-hearts').innerText = "❤️".repeat(lives) + "🖤".repeat(Math.max(0, 5-lives));
     document.getElementById('ui-score').innerText = score;
 }
 
 function gameOver(win) {
     clearInterval(loop);
     document.getElementById('scr-end').style.display = 'flex';
-    document.getElementById('end-msg').innerText = win ? "🏆 森林小博士！" : "💀 再接再厲！";
+    document.getElementById('end-msg').innerText = win ? "🏆 挑戰成功！" : "💀 體力耗盡！";
     document.getElementById('final-pts').innerText = score;
-}
-
-function backToMenu() {
-    clearInterval(loop);
-    document.getElementById('scr-start').style.display = 'flex';
-    document.getElementById('scr-end').style.display = 'none';
 }
 
 window.onkeydown = e => {
     if(e.code === "Space") { e.preventDefault(); togglePause(); }
     const keys = {"ArrowUp":{x:0,y:-1},"ArrowDown":{x:0,y:1},"ArrowLeft":{x:-1,y:0},"ArrowRight":{x:1,y:0}};
-    if(keys[e.key]) {
-        e.preventDefault();
-        const cur = keys[e.key];
-        if(cur.x !== -dir.x || cur.y !== -dir.y) nextD = cur;
-    }
+    if(keys[e.key]) { e.preventDefault(); if(keys[e.key].x !== -dir.x || keys[e.key].y !== -dir.y) nextD = keys[e.key]; }
 };
 </script>
 </body>
